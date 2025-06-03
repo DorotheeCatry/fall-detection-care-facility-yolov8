@@ -1,0 +1,36 @@
+[project]
+name = "secur-age"
+version = "0.1.0"
+description = """
+A real-time fall detection application for elderly care environments. 
+It uses YOLOv8 and OpenCV to monitor webcam streams and detect fall incidents. 
+The Django app will serve as a dashboard to upload videos, view live detection results, 
+and access alerts or logs.
+"""
+readme = "README.md"
+requires-python = ">=3.12,<4.0"
+authors = [
+  { name = "Eliandy DUMORTIER", email = "rymer.eliandy@gmail.com" },
+  { name = "Dorothée CATRY",    email = "catrydorothee@gmail.com" },
+  { name = "Wael BENSOLTANA",   email = "wael.bensoltana@gmail.com" }
+]
+dependencies = [
+  # Django will be added here when you run `poetry add "django^4.3"`
+  "django (>=5.2.1,<6.0.0)",
+  "django-tailwind[reload] (>=4.0.1,<5.0.0)",
+  "django-environ (>=0.12.0,<0.13.0)"
+]
+
+[project.optional-dependencies]
+dev = [
+  "opencv-python >=4.11.0.86,<5.0.0",
+  "ultralytics    >=8.3.148,<9.0.0",
+  "celery         >=5.4.0,<6.0.0",
+  "redis          >=4.5.0,<5.0.0"
+]
+
+
+[build-system]
+requires    = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
