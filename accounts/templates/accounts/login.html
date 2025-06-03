@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load tailwind_tags %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-16 p-6 bg-white rounded-lg shadow-md">
+  <h2 class="text-2xl font-bold mb-4">Employee Login</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="mb-4">
+      <label for="id_username" class="block mb-1">Username</label>
+      <input
+        type="text" name="username" autofocus
+        class="w-full p-2 border rounded"
+      />
+    </div>
+    <div class="mb-4">
+      <label for="id_password" class="block mb-1">Password</label>
+      <input
+        type="password" name="password"
+        class="w-full p-2 border rounded"
+      />
+    </div>
+    <button
+      type="submit"
+      class="w-full py-2 bg-blue-600 text-white font-semibold rounded"
+    >
+      Log in
+    </button>
+  </form>
+</div>
+{% endblock %}

@@ -1341,10 +1341,9 @@ xml = ["lxml (>=4.9.2)"]
 name = "pillow"
 version = "11.2.1"
 description = "Python Imaging Library (Fork)"
-optional = true
+optional = false
 python-versions = ">=3.9"
 groups = ["main"]
-markers = "extra == \"dev\""
 files = [
     {file = "pillow-11.2.1-cp310-cp310-macosx_10_10_x86_64.whl", hash = "sha256:d57a75d53922fc20c165016a20d9c44f73305e67c351bbc60d1adaf662e74047"},
     {file = "pillow-11.2.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:127bf6ac4a5b58b3d32fc8289656f77f80567d65660bc46f72c0d77e6600cc95"},
@@ -2064,4 +2063,4 @@ dev = ["celery", "opencv-python", "redis", "ultralytics"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "2b7ca7a88c94d3b9841f0d3f74ecf49e8a3c616ea3a35c94c136ccebe5a89a39"
+content-hash = "cc4050be4a27766a9b4364169a2f1b9e8d0f520a945e2c956ef37b0763a9bcd2"

@@ -18,7 +18,8 @@ dependencies = [
   # Django will be added here when you run `poetry add "django^4.3"`
   "django (>=5.2.1,<6.0.0)",
   "django-tailwind[reload] (>=4.0.1,<5.0.0)",
-  "django-environ (>=0.12.0,<0.13.0)"
+  "django-environ (>=0.12.0,<0.13.0)",
+  "pillow (>=11.2.1,<12.0.0)"
 ]
 
 [project.optional-dependencies]

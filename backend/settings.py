@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'tailwind',
     'theme',
     'django_browser_reload',
-    'detection'
+    'detection',
+    'accounts'
 ]
 
 MIDDLEWARE = [
@@ -69,7 +70,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -138,3 +139,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Tailwind settings
 TAILWIND_APP_NAME = 'theme'
+
+#Redirect URL after login
+LOGIN_REDIRECT_URL = "detection:alerts"
+LOGOUT_REDIRECT_URL = "accounts:login"

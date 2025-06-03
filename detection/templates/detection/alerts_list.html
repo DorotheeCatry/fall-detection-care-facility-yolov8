@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load tailwind_tags %}
+{% block content %}
+<div class="max-w-4xl mx-auto mt-8">
+  <h1 class="text-3xl font-bold mb-6">Fall Alerts</h1>
+  <table class="min-w-full bg-white">
+    <thead>
+      <tr>
+        <th class="px-4 py-2">Timestamp</th>
+        <th class="px-4 py-2">Detected By</th>
+        <th class="px-4 py-2">Description</th>
+        <th class="px-4 py-2">Status</th>
+        <th class="px-4 py-2">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for alert in alerts %}
+      <tr class="border-b">
+        <td class="px-4 py-2">{{ alert.timestamp }}</td>
+        <td class="px-4 py-2">{{ alert.detected_by }}</td>
+        <td class="px-4 py-2">{{ alert.description|default:"—" }}</td>
+        <td class="px-4 py-2">
+          {% if alert.acknowledged %}
+            <span class="text-green-600 font-semibold">Acknowledged</span>
+          {% else %}
+            <span class="text-red-600 font-semibold">New</span>
+          {% endif %}
+        </td>
+        <td class="px-4 py-2">
+          {% if not alert.acknowledged %}
+            <form
+              method="post"
+              action="{% url 'detection:acknowledge_alert' alert.pk %}"
+              class="inline"
+            >
+              {% csrf_token %}
+              <button
+                type="submit"
+                class="px-3 py-1 bg-blue-600 text-white rounded"
+              >
+                Acknowledge
+              </button>
+            </form>
+          {% else %}
+            <span class="text-gray-500">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="5" class="px-4 py-2 text-center text-gray-500">
+          No alerts to display.
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if is_paginated %}
+    <div class="mt-6">
+      <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+      {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}"
+          class="ml-4 text-blue-600">Previous</a>
+      {% endif %}
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}"
+          class="ml-4 text-blue-600">Next</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load tailwind_tags %}
+{% block content %}
+<div class="max-w-lg mx-auto mt-8 p-6 bg-white rounded-lg shadow-md">
+  <h1 class="text-2xl font-bold mb-4">Test Fall Detection</h1>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="mb-4">
+      {{ form.upload_file.label_tag }}
+      {{ form.upload_file }}
+      {% if form.upload_file.help_text %}
+        <p class="text-sm text-gray-500">{{ form.upload_file.help_text }}</p>
+      {% endif %}
+    </div>
+    <button
+      type="submit"
+      class="w-full py-2 bg-green-600 text-white font-semibold rounded"
+    >
+      Upload and Run Detection
+    </button>
+  </form>
+</div>
+{% endblock %}
