@@ -14,7 +14,7 @@ import numpy as np
 class FallDetectionService:
     def __init__(self):
         # Remplacez le chemin ci-dessous par la localisation de votre .pt
-        self.model = YOLO('/home/utilisateur/Documents/Brief_Computer_Vision/fall-detection-care-facility-yolov8/model_dl/best.pt')
+        self.model = YOLO('C:\\Users\\asus\\OneDrive\\Bureau\\Formations\\Computer Vision\\ProjectSimplon\\fall-detection-care-facility-yolov8\\model_dl\\best.pt')
 
     def detect_falls(self, image: np.ndarray) -> bool:
         """
@@ -27,9 +27,10 @@ class FallDetectionService:
             for box in r.boxes:
                 cls_id = int(box.cls)
                 cls_name = r.names.get(cls_id, "")
+                print("Detected class:", cls_name)
                 conf = float(box.conf)
                 # Suppose que votre modèle a bien une classe nommée "fall"
-                if cls_name == "fall" and conf > 0.5:
+                if cls_name == "Fall-Detected" and conf > 0.8:
                     return True
         return False
 
