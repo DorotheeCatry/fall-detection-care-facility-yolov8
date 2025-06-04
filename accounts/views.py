@@ -1,9 +1,13 @@
-from django.shortcuts import render
+from django.views.generic import RedirectView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
 
-# Create your views here.
-from django.shortcuts import redirect
-from django.contrib.auth.decorators import login_required
+class HomeRedirectView(LoginRequiredMixin, RedirectView):
+    """Redirect authenticated users to the alerts page"""
+    permanent = False
+    url = reverse_lazy('detection:alerts')
 
-@login_required
-def home_redirect(request):
-    return redirect("detection:alerts")
+    def get_redirect_url(self, *args, **kwargs):
+        if not self.request.user.is_authenticated:
+            return reverse_lazy('accounts:login')
+        return super().get_redirect_url(*args, **kwargs)
