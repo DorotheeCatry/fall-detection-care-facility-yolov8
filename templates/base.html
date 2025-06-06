@@ -5,6 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sécur'Âge - {% block title %}Fall Detection System{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://unpkg.com/lucide-icons" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
     {% tailwind_css %}
     <style>
         :root {
@@ -80,6 +85,7 @@
                 <div class="flex items-center">
                     <a href="{% url 'home' %}" class="flex-shrink-0 flex items-center">
                         <span class="text-[#2C6E6B] font-bold text-xl">Sécur'Âge</span>
+                        <i data-lucide="shield-check" class="ml-2 text-[#2C6E6B]"></i>
                     </a>
                 </div>
                 
@@ -104,8 +110,6 @@
                             {% csrf_token %}
                             <button type="submit" class="text-sm text-[#3C4251] hover:text-[#2C6E6B]">Log out</button>
                         </form>
-                    {% else %}
-                        <a href="{% url 'accounts:login' %}" class="text-sm text-[#3C4251] hover:text-[#2C6E6B]">Log in</a>
                     {% endif %}
                 </div>
                 
@@ -170,7 +174,11 @@
             </p>
         </div>
     </footer>
-    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+        lucide.createIcons();
+        });
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const mobileMenuButton = document.getElementById('mobile-menu-button');

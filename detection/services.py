@@ -14,7 +14,7 @@ import numpy as np
 class FallDetectionService:
     def __init__(self):
         # Remplacez le chemin ci-dessous par la localisation de votre .pt
-        self.model = YOLO('C:\\Users\\asus\\OneDrive\\Bureau\\Formations\\Computer Vision\\ProjectSimplon\\fall-detection-care-facility-yolov8\\model_dl\\best.pt')
+        self.model = YOLO('/home/utilisateur/Documents/Brief_Computer_Vision/fall-detection-care-facility-yolov8/model_dl/best.pt')
 
     def detect_falls(self, image: np.ndarray) -> bool:
         """

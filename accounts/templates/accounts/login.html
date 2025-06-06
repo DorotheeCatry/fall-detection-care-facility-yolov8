@@ -22,19 +22,19 @@
                             <div class="absolute inset-0 bg-black bg-opacity-50 z-10 flex items-center justify-center">
                                 <h2 class="text-[#FAF9F6] text-4xl font-bold text-center px-6">Advanced Fall Detection</h2>
                             </div>
-                            <img src="https://images.pexels.com/photos/7551617/pexels-photo-7551617.jpeg" alt="Healthcare professional with elderly patient" class="w-full h-full object-cover">
+                            <img src="https://media.istockphoto.com/id/1494644754/fr/photo/vieil-homme-souffrant-de-douleur-et-luttant-pour-se-relever-apr%C3%A8s-%C3%AAtre-tomb%C3%A9-%C3%A0-la-maison.webp?a=1&b=1&s=612x612&w=0&k=20&c=Y3UrMGBLWor4D06AQhaBO0X-l6Rp5lKG3jnflbbEP1E=" alt="Elderly people falling" class="w-full h-full object-cover">
                         </div>
                         <div class="slide fade">
                             <div class="absolute inset-0 bg-black bg-opacity-50 z-10 flex items-center justify-center">
                                 <h2 class="text-[#FAF9F6] text-4xl font-bold text-center px-6">24/7 Monitoring</h2>
                             </div>
-                            <img src="https://images.pexels.com/photos/7551442/pexels-photo-7551442.jpeg" alt="Modern healthcare facility" class="w-full h-full object-cover">
+                            <img src="https://media.istockphoto.com/id/649145266/fr/photo/ils-ont-un-tas-de-bonne-humeur-des-a%C3%AEn%C3%A9s.webp?a=1&b=1&s=612x612&w=0&k=20&c=fvAiJ1ScPwPvLQXZWLYqkJLsASZF2UCO7uWbg80kml4=" alt="Staff with residents" class="w-full h-full object-cover">
                         </div>
                         <div class="slide fade">
                             <div class="absolute inset-0 bg-black bg-opacity-50 z-10 flex items-center justify-center">
                                 <h2 class="text-[#FAF9F6] text-4xl font-bold text-center px-6">Instant Staff Alerts</h2>
                             </div>
-                            <img src="https://images.pexels.com/photos/7551741/pexels-photo-7551741.jpeg" alt="Healthcare technology" class="w-full h-full object-cover">
+                            <img src="https://plus.unsplash.com/premium_photo-1661488481622-df81506bb046?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzF8fHN0YWZmJTIwYWxlcnRzfGVufDB8fDB8fHww" alt="Healthcare technology" class="w-full h-full object-cover">
                         </div>
                     </div>
                 </div>
@@ -42,7 +42,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="bg-[#FAF9F6] p-6 rounded-lg shadow-xl border-2 border-[#CBD4C2] transform transition-transform hover:scale-105">
                         <div class="text-[#E07A5F] text-4xl mb-4">
-                            🛡️
+                            <i data-lucide="video" class="w-8 h-8"></i>
                         </div>
                         <h3 class="font-bold text-[#2C6E6B] text-lg mb-2">Real-Time Detection</h3>
                         <p class="text-[#3C4251]">Instant alerts when falls occur</p>
@@ -50,7 +50,7 @@
                     
                     <div class="bg-[#FAF9F6] p-6 rounded-lg shadow-xl border-2 border-[#CBD4C2] transform transition-transform hover:scale-105">
                         <div class="text-[#E07A5F] text-4xl mb-4">
-                            📊
+                            <i data-lucide="chart-area" class="w-8 h-8"></i>
                         </div>
                         <h3 class="font-bold text-[#2C6E6B] text-lg mb-2">Detailed Analytics</h3>
                         <p class="text-[#3C4251]">Track and analyze incidents</p>
@@ -58,7 +58,7 @@
                     
                     <div class="bg-[#FAF9F6] p-6 rounded-lg shadow-xl border-2 border-[#CBD4C2] transform transition-transform hover:scale-105">
                         <div class="text-[#E07A5F] text-4xl mb-4">
-                            📱
+                            <i data-lucide="tablet-smartphone" class="w-8 h-8"></i>
                         </div>
                         <h3 class="font-bold text-[#2C6E6B] text-lg mb-2">Mobile Friendly</h3>
                         <p class="text-[#3C4251]">Access from any device</p>
@@ -68,7 +68,11 @@
             
             <div class="lg:w-2/5 mt-12 lg:mt-0">
                 <div class="bg-[#FAF9F6] rounded-xl border-2 border-[#CBD4C2] p-8 shadow-2xl max-w-md mx-auto transform transition-transform hover:scale-[1.02]">
-                    <h2 class="text-2xl font-bold text-center text-[#2C6E6B] mb-8">Welcome Back</h2>
+                    <h2 class="text-2xl font-bold text-center text-[#2C6E6B] mb-2">Welcome Back</h2>
+                    
+                    {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                    {% endif %}
                     
                     <form method="post" action="{% url 'accounts:login' %}">
                         {% csrf_token %}
@@ -83,8 +87,8 @@
                             <label for="id_username" class="form-label text-[#2C6E6B] font-medium">Username</label>
                             <input type="text" name="username" id="id_username" 
                                    class="form-input w-full rounded-lg border-2 border-[#CBD4C2] focus:border-[#2C6E6B] focus:ring focus:ring-[#2C6E6B] focus:ring-opacity-50"
-                                   placeholder="Enter your username"
-                                   required>
+                                   placeholder="Enter your username" 
+                                   <required>
                         </div>
                         
                         <div class="mb-8">
@@ -97,6 +101,7 @@
                         
                         <button type="submit" class="w-full mb-6 text-lg bg-[#E07A5F] hover:bg-[#c56a52] text-white font-medium py-3 px-4 rounded-lg transition duration-150 ease-in-out transform hover:scale-[1.02]">
                             Log In
+                            <i data-lucide="log-in" class="inline-block ml-2"></i>
                         </button>
                         
                         <div class="text-center">
