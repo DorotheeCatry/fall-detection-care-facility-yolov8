@@ -1,0 +1,301 @@
+{# detection/templates/detection/test_detection.html #}
+{% extends "base.html" %}
+
+{% block title %}Test Fall Detection{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-6">
+    {# ─────────────────────────────────────────────── #}
+    {# PAGE HEADING + BACK TO ALERTS                  #}
+    <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+        <h1 class="text-2xl font-bold text-rose-900 mb-4 sm:mb-0">Live Fall Detection & File Upload</h1>
+        <a href="{% url 'detection:alerts' %}" class="btn-secondary flex items-center text-sm">
+            <span class="mr-1">←</span>
+            Back to Alerts
+        </a>
+    </div>
+
+    {# ─────────────────────────────────────────────── #}
+    {# DJANGO MESSAGE BANNER                          #}
+    {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+                <div class="p-4 
+                    {% if message.tags == 'success' %}
+                        bg-emerald-50 text-emerald-800 border-2 border-emerald-200
+                    {% elif message.tags == 'error' %}
+                        bg-rose-50 text-rose-800 border-2 border-rose-200
+                    {% else %}
+                        bg-sky-50 text-sky-800 border-2 border-sky-200
+                    {% endif %} 
+                    rounded-md mb-2">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    {# ─────────────────────────────────────────────── #}
+    {# HIDDEN CSRF TOKEN FOR JAVASCRIPT POSTS          #}
+    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+    {# ─────────────────────────────────────────────── #}
+
+
+    {# ─────────────────────────────────────────────── #}
+    {# LIVE VIDEO DETECTION CARD                       #}
+    <div class="card mb-8 border-2 border-rose-100">
+        <h2 class="text-lg font-medium text-rose-900 mb-4">Live Video Detection</h2>
+
+        {# Container is fixed 640×360 so it never collapses #}
+        <div style="border:2px solid #f87171; width: 640px; height: 360px; position: relative; margin-bottom: 1rem;">
+            <video id="videoElement"
+                   width="640"
+                   height="360"
+                   autoplay
+                   playsinline
+                   style="background: #000; display: block;">
+            </video>
+            <canvas id="outputCanvas"
+                    width="640"
+                    height="360"
+                    style="position:absolute; top:0; left:0;">
+            </canvas>
+            <div id="status"
+                 style="position:absolute; top:8px; right:8px; display:none;"
+                 class="px-3 py-1 rounded-full text-sm font-medium bg-rose-500 text-white">
+                FALL DETECTED!
+            </div>
+        </div>
+
+        {# A status line to show messages like “Fall alert created!” #}
+        <div id="detectionStatus" class="text-rose-600 font-medium mb-2"></div>
+    </div>
+    {# ─────────────────────────────────────────────── #}
+
+
+    {# ─────────────────────────────────────────────── #}
+    {# FILE UPLOAD TEST MEDIA CARD                     #}
+    <div class="card mb-6 border-2 border-rose-100">
+        <h2 class="text-lg font-medium text-rose-900 mb-4">Upload Test Media</h2>
+        
+        <p class="text-gray-600 mb-6">
+            Alternatively, you can upload a video or image to test the fall detection system.
+        </p>
+        
+        <form method="post" enctype="multipart/form-data" action="{% url 'detection:test_detection' %}" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="border-2 border-rose-100 rounded-lg p-6">
+                <label for="id_upload_file" class="form-label text-rose-900">Select Video or Image</label>
+                
+                <div class="mt-2 flex justify-center rounded-lg border-2 border-dashed border-rose-200 px-6 py-10">
+                    <div class="text-center">
+                        <div class="text-rose-300 mb-4">📷</div>
+                        <div class="flex text-sm leading-6 text-gray-600">
+                            <label for="id_upload_file" class="relative cursor-pointer rounded-md bg-white font-semibold text-rose-600 
+                                focus-within:outline-none focus-within:ring-2 focus-within:ring-rose-600 focus-within:ring-offset-2 hover:text-rose-500">
+                                <span>Upload a file</span>
+                                <input id="id_upload_file"
+                                       name="upload_file"
+                                       type="file"
+                                       class="sr-only"
+                                       accept="image/*,video/*"
+                                       required>
+                            </label>
+                            <p class="pl-1">or drag and drop</p>
+                        </div>
+                        <p class="text-xs leading-5 text-gray-600">MP4, MOV, JPG, PNG up to 10MB</p>
+                        <div id="file-name" class="mt-2 text-sm text-gray-500"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <label for="id_description" class="form-label text-rose-900">Description (Optional)</label>
+                <textarea id="id_description"
+                          name="description"
+                          rows="3"
+                          class="form-input border-2 border-rose-100 focus:border-rose-300 focus:ring focus:ring-rose-200"
+                          placeholder="Add details about this test..."></textarea>
+            </div>
+            
+            <div class="flex items-center justify-between">
+                <button type="submit" class="btn-primary">Run Detection</button>
+                <a href="{% url 'detection:alerts' %}" class="text-sm text-gray-600 hover:text-gray-900">Cancel</a>
+            </div>
+        </form>
+    </div>
+    {# ─────────────────────────────────────────────── #}
+
+
+    {# ─────────────────────────────────────────────── #}
+    {# TESTING INFORMATION BOX                          #}
+    <div class="bg-amber-50 border-2 border-amber-200 rounded-lg p-4">
+        <div class="flex">
+            <div class="flex-shrink-0 text-amber-400">⚠️</div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-amber-800">Testing Information</h3>
+                <div class="mt-2 text-sm text-amber-700">
+                    <p>
+                        This is a testing environment. All alerts created here will be marked
+                        as test uploads and can be safely acknowledged without affecting real alert statistics.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {# ─────────────────────────────────────────────── #}
+</div>
+
+<script type="module">
+    import { PoseDetector } from '@mediapipe/tasks-vision';
+    import { FallDetector } from 'lucid-cardio';
+
+    let videoElement    = document.getElementById('videoElement');
+    let canvas          = document.getElementById('outputCanvas');
+    let ctx             = canvas.getContext('2d');
+    let statusDiv       = document.getElementById('status');
+    let detectionStatus = document.getElementById('detectionStatus');
+    let stream          = null;
+    let detector        = null;
+    let fallDetector    = null;
+    let isProcessing    = false;
+
+    async function initializeDetectors() {
+        // 1. Load Mediapipe pose detector (this can take a moment)
+        detector = await PoseDetector.createFromOptions({
+            baseOptions: {
+                modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+                delegate: 'GPU'
+            },
+            runningMode: 'VIDEO'
+        });
+        fallDetector = new FallDetector();
+    }
+
+    async function startCamera() {
+        try {
+            // 2. Request webcam access (only works on HTTPS or localhost)
+            stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            videoElement.srcObject = stream;
+
+            // 3. Match canvas size to video frame
+            canvas.width  = videoElement.clientWidth  || 640;
+            canvas.height = videoElement.clientHeight || 360;
+
+            // 4. Hide any existing “FALL DETECTED” status
+            statusDiv.style.display = 'none';
+
+            // 5. Kick off the detect‐loop
+            detectFalls();
+        } catch (err) {
+            console.error('Error accessing camera:', err);
+            detectionStatus.textContent = 'Error accessing camera: ' + err.message;
+        }
+    }
+
+    function stopCamera() {
+        if (stream) {
+            // Stop all tracks to turn off the camera
+            stream.getTracks().forEach(track => track.stop());
+            videoElement.srcObject = null;
+            isProcessing = false;
+        }
+    }
+
+    async function detectFalls() {
+        if (!stream || isProcessing) return;
+        isProcessing = true;
+
+        while (videoElement.srcObject) {
+            // 1. Run pose detection on the video frame
+            const poses = await detector.detectForVideo(videoElement, Date.now());
+
+            if (poses.landmarks) {
+                // 2. Clear canvas & draw skeleton
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                drawPose(poses.landmarks[0]);
+
+                // 3. Check if fallDetector reports a fall
+                const hasFallen = fallDetector.detectFall(poses.landmarks[0]);
+
+                if (hasFallen) {
+                    statusDiv.style.display = 'block';
+
+                    // 4. Send alert to Django
+                    const response = await fetch('{% url "detection:create_alert" %}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        },
+                        body: JSON.stringify({
+                            type: 'live_camera',
+                            description: 'Fall detected via live camera'
+                        })
+                    });
+
+                    if (response.ok) {
+                        detectionStatus.textContent = 'Fall alert created!';
+                        setTimeout(() => {
+                            detectionStatus.textContent = '';
+                            statusDiv.style.display = 'none';
+                        }, 3000);
+                    }
+                }
+            }
+
+            // 5. Wait until next animation frame
+            await new Promise(resolve => requestAnimationFrame(resolve));
+        }
+
+        isProcessing = false;
+    }
+
+    function drawPose(landmarks) {
+        ctx.strokeStyle = '#10B981';
+        ctx.lineWidth = 2;
+        const connections = [
+            [11, 12], [11, 13], [13, 15],
+            [12, 14], [14, 16], [11, 23],
+            [12, 24], [23, 24], [23, 25],
+            [25, 27], [24, 26], [26, 28]
+        ];
+        for (const [start, end] of connections) {
+            ctx.beginPath();
+            ctx.moveTo(
+                landmarks[start].x * canvas.width,
+                landmarks[start].y * canvas.height
+            );
+            ctx.lineTo(
+                landmarks[end].x * canvas.width,
+                landmarks[end].y * canvas.height
+            );
+            ctx.stroke();
+        }
+        ctx.fillStyle = '#059669';
+        for (const lm of landmarks) {
+            ctx.beginPath();
+            ctx.arc(
+                lm.x * canvas.width,
+                lm.y * canvas.height,
+                4,
+                0,
+                2 * Math.PI
+            );
+            ctx.fill();
+        }
+    }
+
+    // 6. As soon as the page loads, initialize detectors then start the camera
+    window.addEventListener('DOMContentLoaded', async () => {
+        try {
+            await initializeDetectors();
+            startCamera();
+        } catch (err) {
+            console.error('Error initializing detectors:', err);
+            detectionStatus.textContent = 'Error initializing detectors: ' + err.message;
+        }
+    });
+</script>
+{% endblock %}
