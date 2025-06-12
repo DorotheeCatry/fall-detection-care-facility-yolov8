@@ -49,14 +49,17 @@
         <h2 class="text-lg font-medium text-rose-900 mb-4">Live Video Detection</h2>
 
         {# Conteneur fixe (640×360) pour le video + canvas + status #}
-        <div style="border:2px solid #f87171; width:640px; height:360px; position:relative; margin-bottom:1rem;">
+        <div style="border:2px solid #f87171; width:640px; height:500px; position:relative; margin-bottom:1rem;">
             <video id="videoElement"
                    width="640"
-                   height="360"
+                   height="480"
                    autoplay
                    playsinline
                    style="background:#000; display:block;">
             </video>
+           <button id="togglePose" class="mb-2 px-3 py-1 bg-rose-200 text-rose-800 rounded font-medium">
+              Toggle Pose Display
+           </button>
             <canvas id="outputCanvas"
                     width="640"
                     height="360"
@@ -65,7 +68,6 @@
             <div id="status"
                  style="position:absolute; top:8px; right:8px; display:none;"
                  class="px-3 py-1 rounded-full text-sm font-medium bg-rose-500 text-white">
-                FALL DETECTED!
             </div>
         </div>
 
@@ -81,7 +83,7 @@
     {# ──────────────────────────────────────────────────────────── #}
     {# FILE UPLOAD TEST MEDIA CARD                                #}
     <div class="card mb-6 border-2 border-rose-100">
-        <h2 class="text-lg font-medium text-rose-900 mb-4">Upload Test Media</h2>
+        <h2 class="text-lg font-medium text-rose-900 mb-4">Uploades Test Media</h2>
         
         <p class="text-gray-600 mb-6">
             Alternatively, you can upload a video ou image pour tester le système hors‐ligne.
@@ -175,7 +177,11 @@
     FilesetResolver,
     PoseLandmarker
   } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
+  let showPose = true;
 
+  document.getElementById('togglePose').addEventListener('click', () => {
+      showPose = !showPose;
+  });
   // Récupération des éléments du DOM
   let videoElement    = document.getElementById("videoElement");
   let canvas          = document.getElementById("outputCanvas");
@@ -215,7 +221,14 @@
     detectionStatus.textContent = "PoseLandmarker chargé ; démarrage de la caméra…";
     startCamera();
   }
-
+  function updateStatus(statusText) {
+      if (statusText && statusText.trim() !== "") {
+          statusDiv.textContent = statusText;
+          statusDiv.style.display = "block";  // Affiche la div
+      } else {
+          statusDiv.style.display = "none";   // Cache la div si vide ou null
+      }
+  }
   // 2) Démarrer la caméra (getUserMedia + play)
   async function startCamera() {
     try {
@@ -330,6 +343,10 @@
             // Si YOLO a détecté une chute :
             statusDiv.style.display = "block";
 
+            const confidenceValue = data.confidence ? (data.confidence * 100).toFixed(1) : "N/A";
+            detectionStatus.textContent = `Fall detected! Confidence: ${confidenceValue}%`;
+            updateStatus(detectionStatus.textContent);
+            console.log("✅ Chute détectée avec confiance :", confidenceValue);
             // 5d) Créer l’alerte en base via create-alert
             fetch("{% url 'detection:create_alert' %}", {
               method: "POST",
@@ -340,7 +357,7 @@
               },
               body: JSON.stringify({
                 type: "live_camera",
-                description: "Fall detected via YOLOv8"
+                description: "Fall detected via YOLOv8 (Confidence: ${confidenceValue}%)"
               })
             }).then((r) => {
               if (r.ok) {
@@ -363,6 +380,7 @@
 
   // 6) Fonction pour dessiner les landmarks Mediapipe
   function drawLandmarks(landmarks) {
+    if (!showPose) return;
     ctx.strokeStyle = "#10B981";
     ctx.lineWidth = 2;
     const connections = [

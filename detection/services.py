@@ -16,7 +16,7 @@ class FallDetectionService:
         # Remplacez le chemin ci-dessous par la localisation de votre .pt
         self.model = YOLO('/home/utilisateur/Documents/Brief_Computer_Vision/fall-detection-care-facility-yolov8/model_dl/best.pt')
 
-    def detect_falls(self, image: np.ndarray) -> bool:
+    def detect_falls(self, image: np.ndarray) -> tuple[bool, float | None]:
         """
         Reçoit une image NumPy (BGR) et renvoie True si la classe 'fall'
         est détectée avec une confiance > 0.5 (par ex.), sinon False.
@@ -31,8 +31,8 @@ class FallDetectionService:
                 conf = float(box.conf)
                 # Suppose que votre modèle a bien une classe nommée "fall"
                 if cls_name == "Fall-Detected" and conf > 0.8:
-                    return True
-        return False
+                    return True, conf
+        return False, None
 
 
 class VideoClipService:
