@@ -68,7 +68,6 @@
             <div id="status"
                  style="position:absolute; top:8px; right:8px; display:none;"
                  class="px-3 py-1 rounded-full text-sm font-medium bg-rose-500 text-white">
-                FALL DETECTED!
             </div>
         </div>
 
@@ -222,7 +221,14 @@
     detectionStatus.textContent = "PoseLandmarker chargé ; démarrage de la caméra…";
     startCamera();
   }
-
+  function updateStatus(statusText) {
+      if (statusText && statusText.trim() !== "") {
+          statusDiv.textContent = statusText;
+          statusDiv.style.display = "block";  // Affiche la div
+      } else {
+          statusDiv.style.display = "none";   // Cache la div si vide ou null
+      }
+  }
   // 2) Démarrer la caméra (getUserMedia + play)
   async function startCamera() {
     try {
@@ -337,6 +343,10 @@
             // Si YOLO a détecté une chute :
             statusDiv.style.display = "block";
 
+            const confidenceValue = data.confidence ? (data.confidence * 100).toFixed(1) : "N/A";
+            detectionStatus.textContent = `Fall detected! Confidence: ${confidenceValue}%`;
+            updateStatus(detectionStatus.textContent);
+            console.log("✅ Chute détectée avec confiance :", confidenceValue);
             // 5d) Créer l’alerte en base via create-alert
             fetch("{% url 'detection:create_alert' %}", {
               method: "POST",
@@ -347,7 +357,7 @@
               },
               body: JSON.stringify({
                 type: "live_camera",
-                description: "Fall detected via YOLOv8"
+                description: "Fall detected via YOLOv8 (Confidence: ${confidenceValue}%)"
               })
             }).then((r) => {
               if (r.ok) {
