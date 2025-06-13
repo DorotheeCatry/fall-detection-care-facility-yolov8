@@ -192,11 +192,3 @@ cython_debug/
 #  refer to https://docs.cursor.com/context/ignore-files
 .cursorignore
 .cursorindexingignore
-
-theme/*
-
-# Ignorer les fichiers spécifiques
-theme/
-backend/settings.py
-poetry.lock
-pyproject.toml
