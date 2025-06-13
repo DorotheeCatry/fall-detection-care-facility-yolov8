@@ -1,33 +1,25 @@
 # detection/views.py
 
 import os
+import json                
+import base64
 import cv2
 import numpy as np
-from django.shortcuts import get_object_or_404, redirect
+
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import ListView, FormView, TemplateView, RedirectView, View
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponseBadRequest
-import base64
 
 from .models import FallAlert
 from .forms import TestDetectionForm
-from .services import FallDetectionService, VideoClipService
-
-import json
-import json
-import base64
-import cv2
-import numpy as np
-from django.views import View
-from django.http import JsonResponse, HttpResponseBadRequest
-from django.contrib.auth.mixins import LoginRequiredMixin
-
+from .services import FallDetectionService
 
 # Instanciation globale du service pour éviter de recharger le modèle à chaque requête
-fall_service = FallDetectionService()
+fall_service = FallDetectionService(conf_threshold=0.50)
 
 class AlertListView(LoginRequiredMixin, ListView):
     model = FallAlert
@@ -35,6 +27,44 @@ class AlertListView(LoginRequiredMixin, ListView):
     context_object_name = "alerts"
     paginate_by = 20
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.request.GET.get("include_tests") != "1":
+            qs = qs.exclude(detected_by="test_upload")
+        # Date filter
+        date = self.request.GET.get("date")
+        if date:
+            qs = qs.filter(timestamp__date=date)
+        hour = self.request.GET.get("hour")
+        if hour:
+            qs = qs.filter(timestamp__hour=hour.split(":")[0])
+        detected_by = self.request.GET.getlist("detected_by")
+        if detected_by:
+            qs = qs.filter(detected_by__in=detected_by)
+        status = self.request.GET.getlist("status")
+        if status:
+            if "acknowledged" in status and "new" not in status:
+                qs = qs.filter(acknowledged=True)
+            elif "new" in status and "acknowledged" not in status:
+                qs = qs.filter(acknowledged=False)
+        # Sorting
+        sort = self.request.GET.get("sort")
+        order = self.request.GET.get("order", "asc")
+        if sort in ["timestamp", "detected_by", "yolo_confidence"]:
+            if order == "desc":
+                sort = "-" + sort
+            qs = qs.order_by(sort)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["detected_by_options"] = FallAlert.objects.values_list("detected_by", flat=True).distinct()
+        ctx["include_tests"] = (self.request.GET.get("include_tests") == "1")
+        ctx["detected_by_selected"] = self.request.GET.getlist("detected_by")
+        ctx["status_selected"] = self.request.GET.getlist("status")
+        ctx["date_selected"] = self.request.GET.get("date", "")
+        ctx["hour_selected"] = self.request.GET.get("hour", "")
+        return ctx
 
 class AcknowledgeAlertView(LoginRequiredMixin, RedirectView):
     permanent = False
@@ -48,37 +78,40 @@ class AcknowledgeAlertView(LoginRequiredMixin, RedirectView):
         messages.success(self.request, "Alert acknowledged successfully.")
         return reverse_lazy("detection:alerts")
 
-
 class TestDetectionView(LoginRequiredMixin, FormView):
     template_name = "detection/test_detection.html"
-    form_class = TestDetectionForm
-    success_url = reverse_lazy("detection:test_detection")
+    form_class    = TestDetectionForm
+    success_url   = reverse_lazy("detection:test_detection")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        # preserve your live-camera flag
         context["is_camera_enabled"] = True
+        # injection points for the upload preview
+        context["processed_image"] = kwargs.get("processed_image")
+        context["fall_detected"]   = kwargs.get("fall_detected")
+        context["confidence"]      = kwargs.get("confidence")
         return context
 
     def form_valid(self, form):
-        upload = form.cleaned_data["upload_file"]
+        upload      = form.cleaned_data["upload_file"]
         description = form.cleaned_data.get("description", "")
+        temp_path   = None
 
-        # 1. Sauvegarder temporairement le fichier pour que OpenCV puisse le lire
-        temp_path = None
         try:
+            # --- 1. save temp file so OpenCV can read it ---
             if hasattr(upload, "temporary_file_path"):
                 temp_path = upload.temporary_file_path()
             else:
                 import tempfile
-                suffix = os.path.splitext(upload.name)[1]  # ex: ".mp4" ou ".jpg"
-                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+                suffix = os.path.splitext(upload.name)[1]
+                tmp    = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
                 for chunk in upload.chunks():
                     tmp.write(chunk)
-                tmp.flush()
-                tmp.close()
+                tmp.flush(); tmp.close()
                 temp_path = tmp.name
 
-            # 2. Détecter s’il s’agit d’une image ou d’une vidéo, et récupérer la première frame
+            # --- 2. read first frame ---
             ext = os.path.splitext(upload.name)[1].lower()
             if ext in [".jpg", ".jpeg", ".png", ".bmp", ".tiff"]:
                 frame = cv2.imdecode(
@@ -92,31 +125,64 @@ class TestDetectionView(LoginRequiredMixin, FormView):
                 if not ret:
                     raise ValueError("Impossible de lire la première frame de la vidéo.")
 
-            # 3. Appel au modèle YOLOv8 via le service
-            results = fall_service.detect_falls(frame)
+            # --- 3. run raw inference + boolean detection ---
+            raw_results      = fall_service.run_model(frame)
+            fall_detected, confidence = fall_service.detect_falls(frame)
 
-            # 4. Interpréter `results` pour savoir s'il y a eu chute
-            fall_detected = False
-            for r in results:  
+            # --- 4. draw boxes & labels on a copy of the frame ---
+            proc = frame.copy()
+            for r in raw_results:
                 for box in r.boxes:
-                    if int(box.cls) == 0 and float(box.conf) > 0.5:
-                        fall_detected = True
-                        break
-                if fall_detected:
-                    break
+                    # unpack xyxy Tensor → Python ints
+                    x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
+                    cv2.rectangle(proc, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
-            # 5. On crée l’alerte si nécessaire
+                    # safely cast confidence Tensor → float before formatting
+                    cls_name = r.names[int(box.cls)]
+                    conf     = float(box.conf)
+                    label    = f"{cls_name}:{conf:.2f}"
+
+                    cv2.putText(
+                        proc,
+                        label,
+                        (x1, y1 - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.5,
+                        (0, 0, 255),
+                        1
+                    )
+
+            # --- 5. encode to base64 for template preview ---
+            _, buf  = cv2.imencode('.jpg', proc)
+            img_b64 = base64.b64encode(buf).decode()
+
+            # --- 6. if fall → create test alert in DB ---
             if fall_detected:
                 FallAlert.objects.create(
-                    detected_by="test_upload",
-                    description=(description or f"Test upload: {upload.name}"),
+                    detected_by    = "test_upload",
+                    description    = description or f"Test upload: {upload.name}",
+                    yolo_confidence= confidence,
+                    yolo_class     = "Fall-Detected",
                 )
                 messages.success(self.request, "Fall detected ! Alerte créée.")
             else:
                 messages.info(self.request, "Aucune chute détectée pour ce fichier.")
 
+            # --- 7. render immediately with the preview card shown ---
+            return render(
+                self.request,
+                self.template_name,
+                self.get_context_data(
+                    form            = form,
+                    processed_image = img_b64,
+                    fall_detected   = fall_detected,
+                    confidence      = confidence * 100 if confidence else None
+                )
+            )
+
         except Exception as e:
-            messages.error(self.request, f"Error processing upload: {str(e)}")
+            messages.error(self.request, f"Error processing upload: {e}")
+            return super().form_valid(form)
 
         finally:
             if temp_path and not hasattr(upload, "temporary_file_path"):
@@ -124,18 +190,6 @@ class TestDetectionView(LoginRequiredMixin, FormView):
                     os.remove(temp_path)
                 except OSError:
                     pass
-
-        return super().form_valid(form)
-
-
-class LiveDetectionView(LoginRequiredMixin, TemplateView):
-    template_name = "detection/live_detection.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["is_camera_enabled"] = True
-        return context
-
 
 class CreateAlertView(LoginRequiredMixin, View):
     """
@@ -201,7 +255,6 @@ class CreateAlertView(LoginRequiredMixin, View):
 
         # 7. Retourner l'ID créé
         return JsonResponse({"status": "success", "alert_id": new_alert.id}, status=201)
-
 
 class RunYoloView(View):
     """

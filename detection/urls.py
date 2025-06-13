@@ -1,3 +1,5 @@
+#detection/urls.py
+
 from django.urls import path
 from . import views
 
@@ -11,7 +13,7 @@ urlpatterns = [
         name="acknowledge_alert",
     ),
     path("test/", views.TestDetectionView.as_view(), name="test_detection"),
-    path("live/", views.LiveDetectionView.as_view(), name="live_detection"),
+    #path("live/", views.LiveDetectionView.as_view(), name="live_detection"),
     path("create-alert/", views.CreateAlertView.as_view(), name="create_alert"),
     path("run-yolo/", views.RunYoloView.as_view(), name="run_yolo"),
 ]

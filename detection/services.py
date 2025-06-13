@@ -1,4 +1,5 @@
 # detection/services.py
+
 from ultralytics import YOLO
 import cv2
 import os
@@ -6,31 +7,41 @@ import uuid
 import tempfile
 from django.core.files.base import ContentFile
 from .models import FallAlert
-
-from ultralytics import YOLO
-import cv2
 import numpy as np
+from typing import Tuple, List
+from ultralytics.engine.results import Results
+
 
 class FallDetectionService:
-    def __init__(self):
-        # Remplacez le chemin ci-dessous par la localisation de votre .pt
-        self.model = YOLO('/home/utilisateur/Documents/Brief_Computer_Vision/fall-detection-care-facility-yolov8/model_dl/best.pt')
+    def __init__(self, 
+                 model_path: str = '/home/utilisateur/Documents/Brief_Computer_Vision/fall-detection-care-facility-yolov8/model_dl/best.pt',
+                 conf_threshold: float = 0.7
+                ) -> None:
+        """
+        conf_threshold: minimal confidence (0–1) to count as a fall.
+        """
+        self.model = YOLO(model_path)
+        self.conf_threshold = conf_threshold
 
-    def detect_falls(self, image: np.ndarray) -> tuple[bool, float | None]:
+    def run_model(self, image: np.ndarray) -> List[Results]:
         """
-        Reçoit une image NumPy (BGR) et renvoie True si la classe 'fall'
-        est détectée avec une confiance > 0.5 (par ex.), sinon False.
+        Run raw YOLO inference on the BGR image and return the list of Results.
         """
-        results = self.model(image)  # inference YOLO sur l’image
-        for r in results:  # r correspond à un objet Results
-            # r.boxes contient la liste des objets détectés dans l’image
+        return self.model(image)
+
+    def detect_falls(self, image: np.ndarray) -> Tuple[bool, float | None]:
+        """
+        Reçoit une image NumPy (BGR) et renvoie (True, confidence)
+        si la classe 'Fall-Detected' est trouvée avec conf >= conf_threshold,
+        sinon (False, None).
+        """
+        results = self.run_model(image)
+        for r in results:
             for box in r.boxes:
-                cls_id = int(box.cls)
+                cls_id   = int(box.cls)
                 cls_name = r.names.get(cls_id, "")
-                print("Detected class:", cls_name)
-                conf = float(box.conf)
-                # Suppose que votre modèle a bien une classe nommée "fall"
-                if cls_name == "Fall-Detected" and conf > 0.8:
+                conf     = float(box.conf)
+                if cls_name == "Fall-Detected" and conf >= self.conf_threshold:
                     return True, conf
         return False, None
 

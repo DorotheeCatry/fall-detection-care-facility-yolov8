@@ -81,68 +81,76 @@
 
 
     {# ──────────────────────────────────────────────────────────── #}
-    {# FILE UPLOAD TEST MEDIA CARD                                #}
-    <div class="card mb-6 border-2 border-rose-100">
-        <h2 class="text-lg font-medium text-rose-900 mb-4">Uploades Test Media</h2>
-        
-        <p class="text-gray-600 mb-6">
-            Alternatively, you can upload a video ou image pour tester le système hors‐ligne.
-        </p>
-        
-        <form method="post" enctype="multipart/form-data"
-              action="{% url 'detection:test_detection' %}"
-              class="space-y-6">
-            {% csrf_token %}
-            
-            <div class="border-2 border-rose-100 rounded-lg p-6">
-                <label for="id_upload_file" class="form-label text-rose-900">
-                    Select Video or Image
-                </label>
-                
-                <div class="mt-2 flex justify-center rounded-lg border-2 border-dashed border-rose-200 px-6 py-10">
-                    <div class="text-center">
-                        <div class="text-rose-300 mb-4">📷</div>
-                        <div class="flex text-sm leading-6 text-gray-600">
-                            <label for="id_upload_file"
-                                   class="relative cursor-pointer rounded-md bg-white font-semibold text-rose-600 
-                                   focus-within:outline-none focus-within:ring-2 focus-within:ring-rose-600 focus-within:ring-offset-2 hover:text-rose-500">
-                                <span>Upload a file</span>
-                                <input id="id_upload_file"
-                                       name="upload_file"
-                                       type="file"
-                                       class="sr-only"
-                                       accept="image/*,video/*"
-                                       required>
-                            </label>
-                            <p class="pl-1">ou glisser‐déposer</p>
-                        </div>
-                        <p class="text-xs leading-5 text-gray-600">
-                            MP4, MOV, JPG, PNG jusqu’à 10 Mo
-                        </p>
-                        <div id="file-name" class="mt-2 text-sm text-gray-500"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div>
-                <label for="id_description" class="form-label text-rose-900">
-                    Description (Optionnel)
-                </label>
-                <textarea id="id_description"
-                          name="description"
-                          rows="3"
-                          class="form-input border-2 border-rose-100 focus:border-rose-300 focus:ring focus:ring-rose-200"
-                          placeholder="Ajoutez des détails sur ce test…"></textarea>
-            </div>
-            
-            <div class="flex items-center justify-between">
-                <button type="submit" class="btn-primary">Run Detection</button>
-                <a href="{% url 'detection:alerts' %}" class="text-sm text-gray-600 hover:text-gray-900">
-                    Cancel
-                </a>
-            </div>
-        </form>
+{# ──────────────────────────────────────────────────────────── #}
+{# UPLOAD PREVIEW CARD – s’affiche si processed_image existe #}
+{% if processed_image %}
+  <div id="previewCard" class="card mb-8 border-2 border-rose-100">
+    <h2 class="text-lg font-medium text-rose-900 mb-4">Preview &amp; Détection</h2>
+    <div class="flex justify-center mb-4">
+      <img src="data:image/jpeg;base64,{{ processed_image }}"
+           alt="Processed preview"
+           class="max-w-full h-auto rounded-md shadow-sm"/>
     </div>
+    <p class="text-xl font-semibold text-rose-800 mb-4">
+      {% if fall_detected %}
+        Chute détectée ! Confiance : {{ confidence|floatformat:1 }} %
+      {% else %}
+        Aucune chute détectée.
+      {% endif %}
+    </p>
+    <button type="button" id="resetForm" class="btn-secondary">Réinitialiser</button>
+  </div>
+{% endif %}
+
+{# ──────────────────────────────────────────────────────────── #}
+{# UPLOAD FORM CARD – caché quand preview actif #}
+<div id="uploadCard" class="card mb-6 border-2 border-rose-100"
+     {% if processed_image %}style="display:none"{% endif %}>
+  <h2 class="text-lg font-medium text-rose-900 mb-4">Upload Test Media</h2>
+  <form method="post" enctype="multipart/form-data"
+        action="{% url 'detection:test_detection' %}"
+        class="space-y-6">
+    {% csrf_token %}
+    <div class="border-2 border-rose-100 rounded-lg p-6">
+      <label for="id_upload_file" class="form-label text-rose-900">Select Video or Image</label>
+      <div class="mt-2 flex justify-center rounded-lg border-2 border-dashed border-rose-200 px-6 py-10">
+        <div class="text-center">
+          <div class="text-rose-300 mb-4">📷</div>
+          <div class="flex text-sm leading-6 text-gray-600">
+            <label for="id_upload_file"
+                   class="relative cursor-pointer rounded-md bg-white font-semibold text-rose-600 
+                   focus-within:outline-none focus-within:ring-2 focus-within:ring-rose-600
+                   focus-within:ring-offset-2 hover:text-rose-500">
+              <span>Upload a file</span>
+              <input id="id_upload_file"
+                     name="upload_file"
+                     type="file"
+                     class="sr-only"
+                     accept="image/*,video/*"
+                     required>
+            </label>
+            <p class="pl-1">ou glisser‐déposer</p>
+          </div>
+          <p class="text-xs leading-5 text-gray-600">MP4, MOV, JPG, PNG jusqu’à 10 Mo</p>
+          <div id="file-name" class="mt-2 text-sm text-gray-500"></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <label for="id_description" class="form-label text-rose-900">Description (Optionnel)</label>
+      <textarea id="id_description"
+                name="description"
+                rows="3"
+                class="form-input border-2 border-rose-100 focus:border-rose-300 focus:ring focus:ring-rose-200"
+                placeholder="Ajoutez des détails…"></textarea>
+    </div>
+    <div class="flex items-center justify-between">
+      <button type="submit" class="btn-primary">Run Detection</button>
+      <a href="{% url 'detection:alerts' %}" class="text-sm text-gray-600 hover:text-gray-900">Cancel</a>
+    </div>
+  </form>
+</div>
+
     {# ──────────────────────────────────────────────────────────── #}
 
 
@@ -357,10 +365,13 @@
               },
               body: JSON.stringify({
                 type: "live_camera",
-                description: "Fall detected via YOLOv8 (Confidence: ${confidenceValue}%)"
+                description: "Fall detected via YOLOv8",
+                yolo_confidence: data.confidence,
+                yolo_class:       "Fall-Detected",
+                yolo_image:       base64String,
               })
             }).then((r) => {
-              if (r.ok) {
+              if (r.ok) { 
                 detectionStatus.textContent = "Fall alert created !";
                 setTimeout(() => {
                   detectionStatus.textContent = "";
@@ -428,6 +439,31 @@
       detectionStatus.textContent = "Erreur chargement PoseLandmarker : " + err.message;
     });
   });
+</script>
+
+{# ──────────────────────────────────────────────────────────── #}
+{# SCRIPT POUR GÉRER L’AFFICHAGE DU NOM DE FICHIER SÉLECTIONNÉ   #}
+<script>
+  // show selected filename
+  const input     = document.getElementById('id_upload_file');
+  const fileNameD = document.getElementById('file-name');
+  if (input) {
+    input.addEventListener('change', () => {
+      const f = input.files[0];
+      fileNameD.textContent = f ? f.name : '';
+    });
+  }
+  // reset to upload form
+  const resetBtn = document.getElementById('resetForm');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      document.getElementById('previewCard').style.display = 'none';
+      const u = document.getElementById('uploadCard');
+      u.style.display = 'block';
+      input.value = '';
+      fileNameD.textContent = '';
+    });
+  }
 </script>
 
 {% endblock %}
