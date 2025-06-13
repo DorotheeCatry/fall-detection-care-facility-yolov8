@@ -228,8 +228,8 @@ class RunYoloView(View):
             return JsonResponse({"error": f"Invalid image data: {str(e)}"}, status=400)
 
         try:
-            fall_detected = fall_service.detect_falls(img)
+            fall_detected, confidence = fall_service.detect_falls(img)
         except Exception as e:
             return JsonResponse({"error": f"YOLO inference error: {str(e)}"}, status=500)
 
-        return JsonResponse({"fall": fall_detected})
+        return JsonResponse({"fall": fall_detected, "confidence": confidence}, status=200)
