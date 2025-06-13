@@ -13,7 +13,7 @@
         <p class="text-[#F4EDE8] text-lg">Test live camera detection and upload files for analysis</p>
       </div>
       <a href="{% url 'detection:alerts' %}" 
-         class="inline-flex items-center px-6 py-3 bg-[#FAF9F6] hover:bg-[#F4EDE8] text-[#2C6E6B] font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 mt-4 sm:mt-0">
+          class="inline-flex items-center px-6 py-3 bg-[#FAF9F6] hover:bg-[#F4EDE8] text-[#2C6E6B] font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 mt-4 sm:mt-0">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
         </svg>
@@ -26,8 +26,8 @@
       <div class="mb-6 space-y-3">
         {% for message in messages %}
           <div class="p-4 rounded-lg shadow-lg {% if message.tags == 'success' %}bg-green-50 text-green-800 border-l-4 border-green-400
-                         {% elif message.tags == 'error' %}bg-red-50 text-red-800 border-l-4 border-red-400
-                         {% else %}bg-blue-50 text-blue-800 border-l-4 border-blue-400{% endif %}">
+                        {% elif message.tags == 'error' %}bg-red-50 text-red-800 border-l-4 border-red-400
+                        {% else %}bg-blue-50 text-blue-800 border-l-4 border-blue-400{% endif %}">
             <div class="flex items-center">
               <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 {% if message.tags == 'success' %}
@@ -77,7 +77,7 @@
       <!-- Video Container -->
       <div class="relative bg-black rounded-lg overflow-hidden shadow-inner border-2 border-[#CBD4C2] mb-4" style="height: 500px;">
         <video id="videoElement" width="640" height="480" autoplay playsinline 
-               class="absolute inset-0 w-full h-full object-cover">
+              class="absolute inset-0 w-full h-full object-cover">
         </video>
         <canvas id="outputCanvas" width="640" height="360" 
                 class="absolute inset-0 w-full h-full object-cover pointer-events-none">
@@ -85,12 +85,12 @@
         
         <!-- Status Overlay -->
         <div id="status" 
-             class="absolute top-4 right-4 px-4 py-2 bg-[#E07A5F] text-white rounded-full font-medium shadow-lg hidden animate-pulse">
+            class="absolute top-4 right-4 px-4 py-2 bg-[#E07A5F] text-white rounded-full font-medium shadow-lg hidden animate-pulse">
         </div>
         
         <!-- No Camera Message -->
         <div id="noCameraMessage" 
-             class="absolute inset-0 flex items-center justify-center text-[#FAF9F6] text-xl font-medium">
+            class="absolute inset-0 flex items-center justify-center text-[#FAF9F6] text-xl font-medium">
           <div class="text-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -128,8 +128,8 @@
           <div>
             <div class="bg-black rounded-lg overflow-hidden shadow-inner border-2 border-[#CBD4C2]">
               <img src="data:image/jpeg;base64,{{ processed_image }}" 
-                   alt="Processed preview" 
-                   class="w-full h-auto max-h-96 object-contain"/>
+                  alt="Processed preview" 
+                  class="w-full h-auto max-h-96 object-contain"/>
             </div>
           </div>
           
@@ -170,7 +170,7 @@
 
     <!-- Upload Form Card (hidden when preview is active) -->
     <div id="uploadCard" class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 mb-8"
-         {% if processed_image %}style="display:none"{% endif %}>
+        {% if processed_image %}style="display:none"{% endif %}>
       <h2 class="text-2xl font-semibold text-[#2C6E6B] mb-6 flex items-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
@@ -195,7 +195,7 @@
                 Choose file to upload
               </span>
               <input id="id_upload_file" name="upload_file" type="file" class="sr-only" 
-                     accept="image/*,video/*" required>
+                    accept="image/*,video/*" required>
             </label>
             <p class="text-sm text-[#3C4251]">or drag and drop</p>
             <p class="text-xs text-[#3C4251]">MP4, MOV, JPG, PNG up to 10MB</p>
@@ -224,7 +224,7 @@
             Run Detection
           </button>
           <a href="{% url 'detection:alerts' %}" 
-             class="text-sm text-[#3C4251] hover:text-[#2C6E6B] transition-colors">
+            class="text-sm text-[#3C4251] hover:text-[#2C6E6B] transition-colors">
             Cancel
           </a>
         </div>

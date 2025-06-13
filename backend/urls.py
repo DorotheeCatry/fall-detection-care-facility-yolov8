@@ -1,33 +1,39 @@
 """
-URL configuration for backend project.
+URL configuration for the backend project.
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+This module defines the root URL patterns for the Django project, including:
+- Admin interface
+- User accounts (login, logout, password reset)
+- Detection app (fall detection dashboard and related views)
+- Live reload for development (django-browser-reload)
+- Static and media file serving in DEBUG mode
+
+For more information, see:
+https://docs.djangoproject.com/en/5.2/topics/http/urls/
 """
+
 from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
-
-
+from django.conf import settings
+from django.conf.urls.static import static
 
 def redirect_to_dashboard(request):
+    """
+    Redirects the root URL to the detection dashboard.
+    """
     return redirect('detection:dashboard')
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls", namespace="accounts")),
-    path("", lambda request: redirect("detection:dashboard"), name="home"),
+    path("", lambda request: redirect("detection:dashboard"), name="home"),  # Redirect root to dashboard
     path("detection/", include("detection.urls", namespace="detection")),
-    # … other includes …
-    path("__reload__/", include("django_browser_reload.urls")),  # if using live-reload
+    # Add other app includes here as needed
+    path("__reload__/", include("django_browser_reload.urls")),  # Live reload for development
 ]
+
+# Serve media and static files in development mode
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

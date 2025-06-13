@@ -16,14 +16,15 @@ import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Initialize environment variables
 env = environ.Env(
     DEBUG=(bool, False),
     SECRET_KEY=(str, ""),
     # You can add other defaults here, e.g. DATABASE_URL=(str, "sqlite:///db.sqlite3")
 )
-# Read the .env file
+# Read the .env file for sensitive settings
 environ.Env.read_env(BASE_DIR / ".env")
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -34,11 +35,9 @@ SECRET_KEY = env("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG")
 
-ALLOWED_HOSTS = ["*"]
-
+ALLOWED_HOSTS = ["*"]  # Allow all hosts (adjust for production)
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -46,11 +45,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'tailwind',
-    'theme',
-    'django_browser_reload',
-    'detection',
-    'accounts'
+    'tailwind',                  # Tailwind CSS integration
+    'theme',                     # Custom theme app
+    'django_browser_reload',     # Live reload for development
+    'detection',                 # Fall detection app
+    'accounts'                   # User accounts app
 ]
 
 MIDDLEWARE = [
@@ -61,8 +60,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "django.middleware.gzip.GZipMiddleware",
-    "django_browser_reload.middleware.BrowserReloadMiddleware",
+    "django.middleware.gzip.GZipMiddleware",  # Enable gzip compression
+    "django_browser_reload.middleware.BrowserReloadMiddleware",  # Live reload
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -70,7 +69,7 @@ ROOT_URLCONF = 'backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [BASE_DIR / 'templates'],  # Global templates directory
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -84,10 +83,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'backend.wsgi.application'
 
-
-# Database
+# Database configuration
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -95,10 +92,8 @@ DATABASES = {
     }
 }
 
-
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -114,34 +109,34 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
-
 STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Tailwind settings
+# Tailwind CSS app name
 TAILWIND_APP_NAME = 'theme'
 
-#Redirect URL after login
-LOGIN_REDIRECT_URL = "detection:alerts"
-LOGOUT_REDIRECT_URL = "accounts:login"
+# Redirect URLs after authentication actions
+LOGIN_REDIRECT_URL = "detection:alerts"   # Where to redirect after login
+LOGOUT_REDIRECT_URL = "accounts:login"    # Where to redirect after logout
 
+# RTSP camera stream URL for video processing (update with your actual camera URL)
 CAMERA_RTSP_URL = "rtsp://your_camera_url"
+
+# Media files settings
+MEDIA_URL  = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Allow same-origin iframes (for embedding dashboards, etc.)
+X_FRAME_OPTIONS = "SAMEORIGIN"
