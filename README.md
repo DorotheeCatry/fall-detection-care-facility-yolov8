@@ -8,14 +8,14 @@ Over countless development sprints, our interdisciplinary team prioritized relia
 
 ## 📸 Screenshots
 
-| Title                                    | Image                                                                                               | Description                                                               |
-|-------------------------------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
-| Login Page                               | ![Login Page](docs/screenshots/Login.png)                                                          | Secure login interface prompting for test credentials; no live feed.       |
-| Dashboard Overview                       | ![Dashboard Overview](docs/screenshots/Dashboard.png)                                               | Main dashboard showcasing synthetic metrics, weekly activity chart, and recent alerts. |
-| Alerts List View                         | ![Alerts List View](docs/screenshots/Alerts_list.png)                                               | Comprehensive alerts list displaying test-upload thumbnails and statuses.   |
-| Live Detection Interface (Idle)          | ![Live Detection Interface](docs/screenshots/Fall_detection_liveview.png)                           | Live camera detection panel in idle state—awaiting operator to start feed. |
-| Test Detection: No Fall Detected         | ![No Fall Detected](docs/screenshots/Test_View_No_fall_detected.png)                                | Result page showing “No Fall Detected” on a privacy-safe sample image.     |
-| Test Detection: Fall Detected            | ![Fall Detected](docs/screenshots/Test_view_Fall_Detected.png)                                      | Result page with bounding box and confidence score highlighting a detected fall. |
+| Title                              | Image                                                                                               | Description                                                               |
+|-------------------------------------|-----------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------|
+| Login Page                         | ![Login Page](docs/screenshots/Login.png)                                                           | Secure login interface prompting for test credentials; no live feed.       |
+| Dashboard Overview                 | ![Dashboard Overview](docs/screenshots/Dashboard.png)                                               | Main dashboard showcasing synthetic metrics, weekly activity chart, and recent alerts. |
+| Alerts List View                   | ![Alerts List View](docs/screenshots/Alerts_list.png)                                               | Comprehensive alerts list displaying test-upload thumbnails and statuses.   |
+| Live Detection Interface (Idle)    | ![Live Detection Interface](docs/screenshots/Fall_detection_liveview.png)                           | Live camera detection panel in idle state—awaiting operator to start feed. |
+| Test Detection: No Fall Detected   | ![No Fall Detected](docs/screenshots/Test_View_No_fall_detected.png)                                | Result page showing “No Fall Detected” on a privacy-safe sample image.     |
+| Test Detection: Fall Detected      | ![Fall Detected](docs/screenshots/Test_view_Fall_Detected.png)                                      | Result page with bounding box and confidence score highlighting a detected fall. |
 
 ---
 
@@ -102,8 +102,7 @@ Over countless development sprints, our interdisciplinary team prioritized relia
 
 ## 🔧 Configuration
 
-- `** & **`\
-  Ensure in `settings.py`:
+- Ensure in `settings.py`:
   ```python
   MEDIA_URL = '/media/'
   MEDIA_ROOT = BASE_DIR / 'media'
