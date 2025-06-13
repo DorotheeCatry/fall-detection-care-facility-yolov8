@@ -1,3 +1,10 @@
+"""
+Models for the detection app.
+
+Defines the FallAlert model, which represents a detected fall incident,
+and utility functions for dynamically generating upload paths for snapshots and video clips.
+"""
+
 import os
 import uuid
 import tempfile
@@ -14,12 +21,20 @@ User = get_user_model()
 
 def snapshot_upload_to(instance, filename):
     """
-    Chemin dynamique de sauvegarde pour les snapshots.
-    Exemple : snapshots/2025/06/04/<uuid4>.jpg
+    Generate a dynamic upload path for snapshot images.
+
+    The path format is: snapshots/YYYY/MM/DD/<uuid4>.jpg
+
+    Args:
+        instance: The model instance (FallAlert).
+        filename: The original filename.
+
+    Returns:
+        str: The upload path for the snapshot.
     """
     now = timezone.now()
     ext = os.path.splitext(filename)[1].lower() or ".jpg"
-    # Utiliser un UUID pour éviter les collisions de noms
+    # Use a UUID to avoid filename collisions
     new_name = f"{uuid.uuid4().hex}{ext}"
     return os.path.join(
         "snapshots",
@@ -31,8 +46,16 @@ def snapshot_upload_to(instance, filename):
 
 def clip_upload_to(instance, filename):
     """
-    Chemin de sauvegarde pour les petits extraits vidéo (clips).
-    Exemple : clips/2025/06/04/<uuid4>.mp4
+    Generate a dynamic upload path for video clips.
+
+    The path format is: clips/YYYY/MM/DD/<uuid4>.mp4
+
+    Args:
+        instance: The model instance (FallAlert).
+        filename: The original filename.
+
+    Returns:
+        str: The upload path for the video clip.
     """
     now = timezone.now()
     ext = os.path.splitext(filename)[1].lower() or ".mp4"
@@ -47,19 +70,23 @@ def clip_upload_to(instance, filename):
 
 class FallAlert(models.Model):
     """
-    Représente un incident de chute détecté.
-    - timestamp : date et heure de la détection
-    - detected_by : source (live_camera, upload_test, etc.)
-    - image_snapshot : photo du moment de la détection
-    - video_clip : (optionnel) extrait vidéo autour de la détection
-    - description : notes libre
-    - yolo_confidence : confiance retournée par YOLO
-    - yolo_class : classe identifiée par YOLO (ex : 'fall', 'person', etc.)
-    - metadata : JSON brut retourné par le modèle (boxes, keypoints, etc.)
-    - acknowledged, acknowledged_by, acknowledged_at : flux de validation par un employé
-    - is_accurate : whether the detection was accurate (True/False/None)
-    - accuracy_marked_by : user who marked the accuracy
-    - accuracy_marked_at : when accuracy was marked
+    Represents a detected fall incident.
+
+    Fields:
+        timestamp: Date and time of detection.
+        detected_by: Source of detection (e.g., 'live_camera', 'upload_test').
+        image_snapshot: Optional snapshot image of the detection moment.
+        video_clip: Optional short video clip around the detection.
+        description: Free-form notes about the detection.
+        yolo_confidence: Confidence score from YOLO model.
+        yolo_class: Class name predicted by YOLO (e.g., 'fall', 'person').
+        metadata: Raw JSON output from YOLO (boxes, scores, keypoints, etc.).
+        acknowledged: Whether an employee has marked this as reviewed.
+        acknowledged_by: User who acknowledged the alert.
+        acknowledged_at: Timestamp when the alert was acknowledged.
+        is_accurate: Whether the detection was accurate (True/False/None).
+        accuracy_marked_by: User who marked the accuracy.
+        accuracy_marked_at: Timestamp when accuracy was marked.
     """
     timestamp = models.DateTimeField(auto_now_add=True)
     detected_by = models.CharField(
@@ -134,24 +161,29 @@ class FallAlert(models.Model):
         ordering = ["-timestamp"]
 
     def __str__(self):
+        """
+        Return a human-readable string representation of the FallAlert instance,
+        indicating its status (ACK or NEW) and the timestamp of detection.
+        """
         status = "ACK" if self.acknowledged else "NEW"
         return f"FallAlert [{status}] at {self.timestamp:%Y-%m-%d %H:%M:%S}"
 
     def save_snapshot_from_frame(self, frame: np.ndarray):
         """
-        Prend une frame OpenCV (BGR numpy.ndarray), la convertit en JPEG
-        et l'enregistre dans image_snapshot. Appelle save() à la fin.
+        Save an OpenCV frame (BGR numpy.ndarray) as a JPEG image to image_snapshot.
+
+        Converts the frame from BGR to RGB, encodes it as JPEG using PIL,
+        and saves it to the image_snapshot field. Cleans up the temporary file after saving.
         """
-        # Convertir BGR → RGB
+        # Convert BGR to RGB for PIL compatibility
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        # Utiliser PIL pour encoder en JPEG
         img_pil = Image.fromarray(rgb)
         tmp_io = tempfile.NamedTemporaryFile(suffix=".jpg", delete=False)
         img_pil.save(tmp_io, format="JPEG")
         tmp_io.flush()
         tmp_io.seek(0)
 
-        # Générer un nom de fichier unique
+        # Generate a unique filename and save to the model field
         filename = os.path.basename(tmp_io.name)
         django_file = ContentFile(tmp_io.read(), name=filename)
         self.image_snapshot.save(filename, django_file, save=False)
@@ -164,7 +196,10 @@ class FallAlert(models.Model):
 
     def mark_acknowledged(self, user):
         """
-        Marque l'alerte comme validée par un employé.
+        Mark this alert as acknowledged by the given user.
+
+        Sets acknowledged to True, records the user and the current timestamp,
+        and saves the model instance.
         """
         self.acknowledged = True
         self.acknowledged_by = user
@@ -174,6 +209,12 @@ class FallAlert(models.Model):
     def mark_accuracy(self, user, is_accurate):
         """
         Mark the accuracy of this alert.
+
+        Args:
+            user: The user marking the accuracy.
+            is_accurate (bool): True if the detection was accurate, False otherwise.
+
+        Updates the is_accurate field, records the user and timestamp, and saves the model.
         """
         self.is_accurate = is_accurate
         self.accuracy_marked_by = user

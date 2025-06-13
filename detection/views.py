@@ -1,8 +1,17 @@
-# detection/views.py
+"""
+Views for the detection app.
+
+This module contains class-based views for:
+- Dashboard statistics and analytics
+- Listing and filtering fall alerts
+- Acknowledging and marking alert accuracy
+- Test detection via file upload
+- API endpoints for alert creation and YOLO inference (with throttling and snapshot/clip support)
+"""
 
 import os
 import time
-import json                
+import json
 import base64
 import cv2
 import numpy as np
@@ -27,13 +36,19 @@ from .forms import TestDetectionForm
 from .services import FallDetectionService
 from .services import VideoClipService
 
-# Instanciation globale du service pour éviter de recharger le modèle à chaque requête
+# Instantiate the fall detection service globally to avoid reloading the model on every request
 fall_service = FallDetectionService(conf_threshold=0.70)
 
 class DashboardView(LoginRequiredMixin, TemplateView):
+    """
+    Displays the dashboard with statistics and analytics for fall alerts.
+    """
     template_name = "detection/dashboard.html"
-    
+
     def get_context_data(self, **kwargs):
+        """
+        Gather statistics and analytics for the dashboard context.
+        """
         context = super().get_context_data(**kwargs)
         
         # Get current time references
@@ -149,12 +164,18 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 class AlertListView(LoginRequiredMixin, ListView):
+    """
+    Displays a paginated, filterable, and sortable list of fall alerts.
+    """
     model = FallAlert
     template_name = "detection/alerts_list.html"
     context_object_name = "alerts"
     paginate_by = 20
 
     def get_queryset(self):
+        """
+        Return the filtered and sorted queryset for the alert list.
+        """
         qs = super().get_queryset()
         if self.request.GET.get("include_tests") != "1":
             qs = qs.exclude(detected_by="test_upload")
@@ -184,6 +205,9 @@ class AlertListView(LoginRequiredMixin, ListView):
         return qs
 
     def get_context_data(self, **kwargs):
+        """
+        Add filter options and selections to the context.
+        """
         ctx = super().get_context_data(**kwargs)
         ctx["detected_by_options"] = FallAlert.objects.values_list("detected_by", flat=True).distinct()
         ctx["include_tests"] = (self.request.GET.get("include_tests") == "1")
@@ -194,9 +218,16 @@ class AlertListView(LoginRequiredMixin, ListView):
         return ctx
 
 class AcknowledgeAlertView(LoginRequiredMixin, RedirectView):
+    """
+    Marks an alert as acknowledged and optionally marks its accuracy.
+    Redirects back to the alerts list.
+    """
     permanent = False
 
     def get_redirect_url(self, *args, **kwargs):
+        """
+        Acknowledge the alert and optionally mark its accuracy.
+        """
         alert = get_object_or_404(FallAlert, pk=kwargs["pk"])
         is_accurate = self.request.GET.get('accurate')
         
@@ -220,11 +251,17 @@ class AcknowledgeAlertView(LoginRequiredMixin, RedirectView):
         return reverse_lazy("detection:alerts")
 
 class TestDetectionView(LoginRequiredMixin, FormView):
+    """
+    Handles file uploads for test fall detection and displays results.
+    """
     template_name = "detection/test_detection.html"
     form_class    = TestDetectionForm
     success_url   = reverse_lazy("detection:test_detection")
 
     def get_context_data(self, **kwargs):
+        """
+        Add processed image and detection results to the context.
+        """
         context = super().get_context_data(**kwargs)
         # preserve your live-camera flag
         context["is_camera_enabled"] = True
@@ -235,6 +272,9 @@ class TestDetectionView(LoginRequiredMixin, FormView):
         return context
 
     def form_valid(self, form):
+        """
+        Process the uploaded file, run fall detection, and render results.
+        """
         upload      = form.cleaned_data["upload_file"]
         description = form.cleaned_data.get("description", "")
         temp_path   = None
@@ -338,13 +378,15 @@ class TestDetectionView(LoginRequiredMixin, FormView):
 
 class CreateAlertView(LoginRequiredMixin, View):
     """
-    Crée ou met à jour un FallAlert live_camera,
-    throttle : pas plus d'une nouvelle alerte toutes les THRESHOLD secondes.
-    Gère yolo_confidence, yolo_class, description, snapshot_b64, et clip vidéo.
+    API endpoint to create or update a FallAlert (live_camera alerts are throttled).
+    Handles yolo_confidence, yolo_class, description, snapshot_b64, and video clip.
     """
     THRESHOLD = timedelta(seconds=30)
 
     def post(self, request, *args, **kwargs):
+        """
+        Handle POST request to create or update a FallAlert.
+        """
         # 1. Charger le JSON du body
         try:
             payload = json.loads(request.body.decode("utf-8"))
@@ -434,13 +476,16 @@ class CreateAlertView(LoginRequiredMixin, View):
 
 class RunYoloView(View):
     """
-    Reçoit en POST une image Base64 (sans préfixe), lève un bool fall=True/False
-    et throttle la création d'alertes live_camera.
+    API endpoint to run YOLO inference on a base64 image and (optionally) create/update a live_camera alert.
+    Throttles alert creation to avoid duplicates.
     """
-    THRESHOLD_SECS = 30         # ne pas recréer plus souvent qu'une fois tous les 30s
+    THRESHOLD_SECS = 30         # Do not create more than one alert every 30 seconds
     CACHE_KEY      = "last_live_alert_ts"
 
     def post(self, request, *args, **kwargs):
+        """
+        Handle POST request with base64 image, run YOLO inference, and manage alert creation.
+        """
         try:
             payload = json.loads(request.body.decode("utf-8"))
         except json.JSONDecodeError:

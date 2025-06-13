@@ -1,3 +1,10 @@
+"""
+URL configuration for the accounts app.
+
+This module defines URL patterns for user authentication, including login, logout,
+and password reset functionality using Django's built-in authentication views.
+"""
+
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from . import views
