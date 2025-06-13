@@ -1,5 +1,3 @@
-# detection/models.py
-
 import os
 import uuid
 import tempfile
@@ -59,6 +57,9 @@ class FallAlert(models.Model):
     - yolo_class : classe identifiée par YOLO (ex : 'fall', 'person', etc.)
     - metadata : JSON brut retourné par le modèle (boxes, keypoints, etc.)
     - acknowledged, acknowledged_by, acknowledged_at : flux de validation par un employé
+    - is_accurate : whether the detection was accurate (True/False/None)
+    - accuracy_marked_by : user who marked the accuracy
+    - accuracy_marked_at : when accuracy was marked
     """
     timestamp = models.DateTimeField(auto_now_add=True)
     detected_by = models.CharField(
@@ -112,6 +113,22 @@ class FallAlert(models.Model):
         null=True,
         blank=True
     )
+    is_accurate = models.BooleanField(
+        null=True,
+        blank=True,
+        help_text="Whether this detection was accurate (True=accurate, False=false positive, None=not marked)"
+    )
+    accuracy_marked_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="accuracy_marked_alerts"
+    )
+    accuracy_marked_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
 
     class Meta:
         ordering = ["-timestamp"]
@@ -123,7 +140,7 @@ class FallAlert(models.Model):
     def save_snapshot_from_frame(self, frame: np.ndarray):
         """
         Prend une frame OpenCV (BGR numpy.ndarray), la convertit en JPEG
-        et l’enregistre dans image_snapshot. Appelle save() à la fin.
+        et l'enregistre dans image_snapshot. Appelle save() à la fin.
         """
         # Convertir BGR → RGB
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -145,12 +162,20 @@ class FallAlert(models.Model):
         except OSError:
             pass
 
-
     def mark_acknowledged(self, user):
         """
-        Marque l’alerte comme validée par un employé.
+        Marque l'alerte comme validée par un employé.
         """
         self.acknowledged = True
         self.acknowledged_by = user
         self.acknowledged_at = timezone.now()
+        self.save()
+
+    def mark_accuracy(self, user, is_accurate):
+        """
+        Mark the accuracy of this alert.
+        """
+        self.is_accurate = is_accurate
+        self.accuracy_marked_by = user
+        self.accuracy_marked_at = timezone.now()
         self.save()

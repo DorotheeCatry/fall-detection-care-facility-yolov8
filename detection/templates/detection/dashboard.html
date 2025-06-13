@@ -33,7 +33,7 @@
     </div>
 
     <!-- Key Metrics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
       
       <!-- Total Alerts -->
       <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 transform transition-transform hover:scale-105">
@@ -102,6 +102,27 @@
           <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Model Accuracy -->
+      <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 transform transition-transform hover:scale-105">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-[#3C4251] mb-1">Model Accuracy</p>
+            {% if stats.model_accuracy is not None %}
+              <p class="text-3xl font-bold text-[#2C6E6B]">{{ stats.model_accuracy|floatformat:1 }}%</p>
+              <p class="text-xs text-[#3C4251] mt-1">{{ stats.total_marked_accuracy }} alerts marked</p>
+            {% else %}
+              <p class="text-3xl font-bold text-gray-400">N/A</p>
+              <p class="text-xs text-[#3C4251] mt-1">No accuracy data yet</p>
+            {% endif %}
+          </div>
+          <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-600" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M9 3a1 1 0 012 0v5.5a.5.5 0 001 0V4a1 1 0 112 0v4.5a.5.5 0 001 0V6a1 1 0 112 0v6a2 2 0 01-2 2h-5a8 8 0 01-7.968-7.332A69.87 69.87 0 003 12a1 1 0 01-1-1V9a1 1 0 011-1 5 5 0 015-5z" clip-rule="evenodd" />
             </svg>
           </div>
         </div>
@@ -314,6 +335,12 @@
             <span class="text-sm font-medium text-[#3C4251]">Avg. Response Time</span>
             <span class="text-sm font-bold text-[#E07A5F]">{{ stats.avg_response_time|default:"N/A" }}</span>
           </div>
+          {% if stats.model_accuracy is not None %}
+          <div class="flex items-center justify-between">
+            <span class="text-sm font-medium text-[#3C4251]">Model Accuracy</span>
+            <span class="text-sm font-bold text-[#2C6E6B]">{{ stats.model_accuracy|floatformat:1 }}%</span>
+          </div>
+          {% endif %}
         </div>
       </div>
     </div>

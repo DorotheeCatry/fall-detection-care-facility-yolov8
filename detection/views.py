@@ -53,6 +53,12 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         acknowledged_alerts = FallAlert.objects.exclude(detected_by="test_upload").filter(acknowledged=True).count()
         response_rate = (acknowledged_alerts / total_real_alerts * 100) if total_real_alerts > 0 else 0
         
+        # Model accuracy calculation
+        accuracy_marked_alerts = FallAlert.objects.exclude(detected_by="test_upload").filter(is_accurate__isnull=False)
+        total_marked = accuracy_marked_alerts.count()
+        accurate_alerts = accuracy_marked_alerts.filter(is_accurate=True).count()
+        model_accuracy = (accurate_alerts / total_marked * 100) if total_marked > 0 else None
+        
         # Weekly activity (last 7 days)
         weekly_activity = []
         max_daily_count = 0
@@ -128,6 +134,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             'today_vs_yesterday': today_alerts - yesterday_alerts,
             'pending_alerts': pending_alerts,
             'response_rate': response_rate,
+            'model_accuracy': model_accuracy,
+            'total_marked_accuracy': total_marked,
             'weekly_activity': weekly_activity,
             'max_daily_alerts': max_daily_count,
             'detection_sources': detection_sources,
@@ -190,11 +198,25 @@ class AcknowledgeAlertView(LoginRequiredMixin, RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         alert = get_object_or_404(FallAlert, pk=kwargs["pk"])
+        is_accurate = self.request.GET.get('accurate')
+        
+        # Always acknowledge the alert
         alert.acknowledged = True
         alert.acknowledged_by = self.request.user
         alert.acknowledged_at = timezone.now()
+        
+        # Set accuracy if specified
+        if is_accurate is not None:
+            alert.is_accurate = is_accurate == 'true'
+            alert.accuracy_marked_by = self.request.user
+            alert.accuracy_marked_at = timezone.now()
+            
+            accuracy_text = "accurate" if alert.is_accurate else "inaccurate"
+            messages.success(self.request, f"Alert acknowledged and marked as {accuracy_text}.")
+        else:
+            messages.success(self.request, "Alert acknowledged successfully.")
+        
         alert.save()
-        messages.success(self.request, "Alert acknowledged successfully.")
         return reverse_lazy("detection:alerts")
 
 class TestDetectionView(LoginRequiredMixin, FormView):

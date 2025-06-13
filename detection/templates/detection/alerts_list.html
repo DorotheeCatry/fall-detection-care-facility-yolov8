@@ -147,7 +147,10 @@
                   Status
                 </th>
                 <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">
-                  Action
+                  Accuracy
+                </th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">
+                  Actions
                 </th>
                 <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">
                   Acknowledged By
@@ -239,20 +242,67 @@
                   </td>
 
                   <td class="px-6 py-4 whitespace-nowrap">
-                    {% if not alert.acknowledged %}
-                      <form method="post" action="{% url 'detection:acknowledge_alert' alert.id %}" class="inline">
-                        {% csrf_token %}
-                        <button type="submit" 
-                                class="inline-flex items-center px-4 py-2 bg-[#2C6E6B] hover:bg-[#1f4f4c] text-white text-sm font-medium rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#2C6E6B] focus:ring-opacity-50">
+                    {% if alert.is_accurate is not None %}
+                      {% if alert.is_accurate %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                           </svg>
-                          Acknowledge
-                        </button>
-                      </form>
+                          Accurate
+                        </span>
+                      {% else %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                          </svg>
+                          False Positive
+                        </span>
+                      {% endif %}
                     {% else %}
-                      <span class="text-sm text-gray-400">—</span>
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                        </svg>
+                        Not Marked
+                      </span>
                     {% endif %}
+                  </td>
+
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex flex-col space-y-2">
+                      {% if not alert.acknowledged %}
+                        {% if alert.detected_by != 'test_upload' %}
+                          <!-- Accuracy buttons for live camera alerts -->
+                          <div class="flex space-x-1">
+                            <a href="{% url 'detection:acknowledge_alert' alert.id %}?accurate=true" 
+                               class="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-opacity-50">
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                              </svg>
+                              Accurate
+                            </a>
+                            <a href="{% url 'detection:acknowledge_alert' alert.id %}?accurate=false" 
+                               class="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-red-600 focus:ring-opacity-50">
+                              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
+                              </svg>
+                              False +
+                            </a>
+                          </div>
+                        {% else %}
+                          <!-- Simple acknowledge for test uploads -->
+                          <a href="{% url 'detection:acknowledge_alert' alert.id %}" 
+                             class="inline-flex items-center px-3 py-1 bg-[#2C6E6B] hover:bg-[#1f4f4c] text-white text-xs font-medium rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#2C6E6B] focus:ring-opacity-50">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            Acknowledge
+                          </a>
+                        {% endif %}
+                      {% else %}
+                        <span class="text-sm text-gray-400">—</span>
+                      {% endif %}
+                    </div>
                   </td>
 
                   <td class="px-6 py-4 whitespace-nowrap">
