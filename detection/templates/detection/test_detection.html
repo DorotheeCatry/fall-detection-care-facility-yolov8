@@ -1,434 +1,611 @@
-{# detection/templates/detection/test_detection.html #}
 {% extends "base.html" %}
 
 {% block title %}Test Fall Detection{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto py-6">
-    {# ──────────────────────────────────────────────────────────── #}
-    {# BACK TO ALERTS LINK + PAGE HEADING                         #}
-    <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-        <h1 class="text-2xl font-bold text-rose-900 mb-4 sm:mb-0">
-            Live Fall Detection & File Upload
-        </h1>
-        <a href="{% url 'detection:alerts' %}" class="btn-secondary flex items-center text-sm">
-            <span class="mr-1">←</span>
-            Back to Alerts
-        </a>
+<div class="bg-gradient-to-br from-[#2C6E6B] to-[#CBD4C2] min-h-screen">
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- Header Section -->
+    <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+      <div>
+        <h1 class="text-3xl font-bold text-[#2C6E6B] mb-2">Fall Detection Testing</h1>
+        <p class="text-[#F4EDE8] text-lg">Test live camera detection and upload files for analysis</p>
+      </div>
+      <a href="{% url 'detection:alerts' %}" 
+         class="inline-flex items-center px-6 py-3 bg-[#FAF9F6] hover:bg-[#F4EDE8] text-[#2C6E6B] font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 mt-4 sm:mt-0">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+        </svg>
+        Back to Alerts
+      </a>
     </div>
 
-    {# ──────────────────────────────────────────────────────────── #}
-    {# SHOW ANY DJANGO MESSAGES                                    #}
+    <!-- Messages -->
     {% if messages %}
-        <div class="mb-6">
-            {% for message in messages %}
-                <div class="p-4 
-                    {% if message.tags == 'success' %}
-                        bg-emerald-50 text-emerald-800 border-2 border-emerald-200
-                    {% elif message.tags == 'error' %}
-                        bg-rose-50 text-rose-800 border-2 border-rose-200
-                    {% else %}
-                        bg-sky-50 text-sky-800 border-2 border-sky-200
-                    {% endif %}
-                    rounded-md mb-2">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        </div>
+      <div class="mb-6 space-y-3">
+        {% for message in messages %}
+          <div class="p-4 rounded-lg shadow-lg {% if message.tags == 'success' %}bg-green-50 text-green-800 border-l-4 border-green-400
+                         {% elif message.tags == 'error' %}bg-red-50 text-red-800 border-l-4 border-red-400
+                         {% else %}bg-blue-50 text-blue-800 border-l-4 border-blue-400{% endif %}">
+            <div class="flex items-center">
+              <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                {% if message.tags == 'success' %}
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                {% elif message.tags == 'error' %}
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                {% else %}
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                {% endif %}
+              </svg>
+              {{ message }}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
     {% endif %}
 
-    {# ──────────────────────────────────────────────────────────── #}
-    {# HIDDEN CSRF TOKEN FOR JAVASCRIPT BELOW                      #}
     <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-    {# ──────────────────────────────────────────────────────────── #}
 
-
-    {# ──────────────────────────────────────────────────────────── #}
-    {# LIVE VIDEO DETECTION CARD                                   #}
-    <div class="card mb-8 border-2 border-rose-100">
-        <h2 class="text-lg font-medium text-rose-900 mb-4">Live Video Detection</h2>
-
-        {# Conteneur fixe (640×360) pour le video + canvas + status #}
-        <div style="border:2px solid #f87171; width:640px; height:500px; position:relative; margin-bottom:1rem;">
-            <video id="videoElement"
-                   width="640"
-                   height="480"
-                   autoplay
-                   playsinline
-                   style="background:#000; display:block;">
-            </video>
-           <button id="togglePose" class="mb-2 px-3 py-1 bg-rose-200 text-rose-800 rounded font-medium">
-              Toggle Pose Display
-           </button>
-            <canvas id="outputCanvas"
-                    width="640"
-                    height="360"
-                    style="position:absolute; top:0; left:0;">
-            </canvas>
-            <div id="status"
-                 style="position:absolute; top:8px; right:8px; display:none;"
-                 class="px-3 py-1 rounded-full text-sm font-medium bg-rose-500 text-white">
-            </div>
+    <!-- Live Video Detection Card -->
+    <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 mb-8">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-semibold text-[#2C6E6B] flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+          </svg>
+          Live Camera Detection
+        </h2>
+        <div class="flex gap-3">
+          <button id="togglePose" 
+                  class="inline-flex items-center px-4 py-2 bg-[#CBD4C2] hover:bg-[#9db09a] text-[#2C6E6B] font-medium rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z" clip-rule="evenodd" />
+            </svg>
+            Toggle Pose
+          </button>
+          <button id="startCamera" 
+                  class="inline-flex items-center px-6 py-3 bg-[#E07A5F] hover:bg-[#c56a52] text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+            </svg>
+            Start Camera
+          </button>
         </div>
+      </div>
 
-        {# Le bouton pour activer / désactiver la caméra #}
-        <div class="flex justify-between items-center">
-            <button id="startCamera" class="btn-primary">Start Camera</button>
-            <div id="detectionStatus" class="text-rose-600 font-medium"></div>
-        </div>
-    </div>
-    {# ──────────────────────────────────────────────────────────── #}
-
-
-    {# ──────────────────────────────────────────────────────────── #}
-    {# FILE UPLOAD TEST MEDIA CARD                                #}
-    <div class="card mb-6 border-2 border-rose-100">
-        <h2 class="text-lg font-medium text-rose-900 mb-4">Uploades Test Media</h2>
+      <!-- Video Container -->
+      <div class="relative bg-black rounded-lg overflow-hidden shadow-inner border-2 border-[#CBD4C2] mb-4" style="height: 500px;">
+        <video id="videoElement" width="640" height="480" autoplay playsinline 
+               class="absolute inset-0 w-full h-full object-cover">
+        </video>
+        <canvas id="outputCanvas" width="640" height="360" 
+                class="absolute inset-0 w-full h-full object-cover pointer-events-none">
+        </canvas>
         
-        <p class="text-gray-600 mb-6">
-            Alternatively, you can upload a video ou image pour tester le système hors‐ligne.
-        </p>
-        
-        <form method="post" enctype="multipart/form-data"
-              action="{% url 'detection:test_detection' %}"
-              class="space-y-6">
-            {% csrf_token %}
-            
-            <div class="border-2 border-rose-100 rounded-lg p-6">
-                <label for="id_upload_file" class="form-label text-rose-900">
-                    Select Video or Image
-                </label>
-                
-                <div class="mt-2 flex justify-center rounded-lg border-2 border-dashed border-rose-200 px-6 py-10">
-                    <div class="text-center">
-                        <div class="text-rose-300 mb-4">📷</div>
-                        <div class="flex text-sm leading-6 text-gray-600">
-                            <label for="id_upload_file"
-                                   class="relative cursor-pointer rounded-md bg-white font-semibold text-rose-600 
-                                   focus-within:outline-none focus-within:ring-2 focus-within:ring-rose-600 focus-within:ring-offset-2 hover:text-rose-500">
-                                <span>Upload a file</span>
-                                <input id="id_upload_file"
-                                       name="upload_file"
-                                       type="file"
-                                       class="sr-only"
-                                       accept="image/*,video/*"
-                                       required>
-                            </label>
-                            <p class="pl-1">ou glisser‐déposer</p>
-                        </div>
-                        <p class="text-xs leading-5 text-gray-600">
-                            MP4, MOV, JPG, PNG jusqu’à 10 Mo
-                        </p>
-                        <div id="file-name" class="mt-2 text-sm text-gray-500"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div>
-                <label for="id_description" class="form-label text-rose-900">
-                    Description (Optionnel)
-                </label>
-                <textarea id="id_description"
-                          name="description"
-                          rows="3"
-                          class="form-input border-2 border-rose-100 focus:border-rose-300 focus:ring focus:ring-rose-200"
-                          placeholder="Ajoutez des détails sur ce test…"></textarea>
-            </div>
-            
-            <div class="flex items-center justify-between">
-                <button type="submit" class="btn-primary">Run Detection</button>
-                <a href="{% url 'detection:alerts' %}" class="text-sm text-gray-600 hover:text-gray-900">
-                    Cancel
-                </a>
-            </div>
-        </form>
-    </div>
-    {# ──────────────────────────────────────────────────────────── #}
-
-
-    {# ──────────────────────────────────────────────────────────── #}
-    {# TESTING INFORMATION BOX                                     #}
-    <div class="bg-amber-50 border-2 border-amber-200 rounded-lg p-4">
-        <div class="flex">
-            <div class="flex-shrink-0 text-amber-400">⚠️</div>
-            <div class="ml-3">
-                <h3 class="text-sm font-medium text-amber-800">Testing Information</h3>
-                <div class="mt-2 text-sm text-amber-700">
-                    <p>
-                        Ceci est un environnement de test. Toutes les alertes créées ici
-                        seront marquées comme « test » et peuvent être reconnues sans affecter
-                        les statistiques réelles.
-                    </p>
-                </div>
-            </div>
+        <!-- Status Overlay -->
+        <div id="status" 
+             class="absolute top-4 right-4 px-4 py-2 bg-[#E07A5F] text-white rounded-full font-medium shadow-lg hidden animate-pulse">
         </div>
+        
+        <!-- No Camera Message -->
+        <div id="noCameraMessage" 
+             class="absolute inset-0 flex items-center justify-center text-[#FAF9F6] text-xl font-medium">
+          <div class="text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <p>Click "Start Camera" to begin live detection</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detection Status -->
+      <div class="bg-[#F4EDE8] rounded-lg p-4 border border-[#CBD4C2]">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <div id="statusIndicator" class="w-3 h-3 rounded-full bg-gray-400 mr-3"></div>
+            <span class="text-sm font-medium text-[#2C6E6B]">Detection Status:</span>
+          </div>
+          <div id="detectionStatus" class="text-sm font-medium text-[#3C4251]">
+            Camera not started
+          </div>
+        </div>
+      </div>
     </div>
-    {# ──────────────────────────────────────────────────────────── #}
+
+    <!-- Upload Preview Card (shown when processed_image exists) -->
+    {% if processed_image %}
+      <div id="previewCard" class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 mb-8">
+        <h2 class="text-2xl font-semibold text-[#2C6E6B] mb-6 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+          </svg>
+          Detection Results
+        </h2>
+        
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <div class="bg-black rounded-lg overflow-hidden shadow-inner border-2 border-[#CBD4C2]">
+              <img src="data:image/jpeg;base64,{{ processed_image }}" 
+                   alt="Processed preview" 
+                   class="w-full h-auto max-h-96 object-contain"/>
+            </div>
+          </div>
+          
+          <div class="space-y-4">
+            <div class="bg-{% if fall_detected %}red{% else %}green{% endif %}-50 border-2 border-{% if fall_detected %}red{% else %}green{% endif %}-200 rounded-lg p-4">
+              <div class="flex items-center">
+                {% if fall_detected %}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-600 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5v3a.75.75 0 001.5 0v-3A.75.75 0 009 9z" clip-rule="evenodd" />
+                  </svg>
+                  <div>
+                    <h3 class="text-lg font-semibold text-red-800">Fall Detected!</h3>
+                    <p class="text-red-700">Confidence: {{ confidence|floatformat:1 }}%</p>
+                  </div>
+                {% else %}
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                  <div>
+                    <h3 class="text-lg font-semibold text-green-800">No Fall Detected</h3>
+                    <p class="text-green-700">The system did not detect any falls in this media.</p>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+            
+            <button type="button" id="resetForm" 
+                    class="w-full inline-flex items-center justify-center px-6 py-3 bg-[#CBD4C2] hover:bg-[#9db09a] text-[#2C6E6B] font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+              </svg>
+              Test Another File
+            </button>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Upload Form Card (hidden when preview is active) -->
+    <div id="uploadCard" class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 mb-8"
+         {% if processed_image %}style="display:none"{% endif %}>
+      <h2 class="text-2xl font-semibold text-[#2C6E6B] mb-6 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+        </svg>
+        Upload Test Media
+      </h2>
+      
+      <form method="post" enctype="multipart/form-data" action="{% url 'detection:test_detection' %}" class="space-y-6">
+        {% csrf_token %}
+        
+        <!-- File Upload Area -->
+        <div class="border-2 border-dashed border-[#CBD4C2] rounded-xl p-8 text-center hover:border-[#2C6E6B] transition-colors">
+          <div class="mx-auto w-12 h-12 bg-[#E07A5F] bg-opacity-10 rounded-full flex items-center justify-center mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#E07A5F]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+          </div>
+          
+          <div class="space-y-2">
+            <label for="id_upload_file" class="cursor-pointer">
+              <span class="text-lg font-medium text-[#2C6E6B] hover:text-[#E07A5F] transition-colors">
+                Choose file to upload
+              </span>
+              <input id="id_upload_file" name="upload_file" type="file" class="sr-only" 
+                     accept="image/*,video/*" required>
+            </label>
+            <p class="text-sm text-[#3C4251]">or drag and drop</p>
+            <p class="text-xs text-[#3C4251]">MP4, MOV, JPG, PNG up to 10MB</p>
+          </div>
+          
+          <div id="file-name" class="mt-4 text-sm font-medium text-[#2C6E6B]"></div>
+        </div>
+
+        <!-- Description Field -->
+        <div class="space-y-2">
+          <label for="id_description" class="block text-sm font-medium text-[#2C6E6B]">
+            Description (Optional)
+          </label>
+          <textarea id="id_description" name="description" rows="3" 
+                    class="w-full p-3 border-2 border-[#CBD4C2] rounded-lg focus:border-[#2C6E6B] focus:ring focus:ring-[#2C6E6B] focus:ring-opacity-50 resize-none"
+                    placeholder="Add any details about this test..."></textarea>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex items-center justify-between pt-4">
+          <button type="submit" 
+                  class="inline-flex items-center px-8 py-3 bg-[#E07A5F] hover:bg-[#c56a52] text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd" />
+            </svg>
+            Run Detection
+          </button>
+          <a href="{% url 'detection:alerts' %}" 
+             class="text-sm text-[#3C4251] hover:text-[#2C6E6B] transition-colors">
+            Cancel
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Testing Information -->
+    <div class="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-6">
+      <div class="flex items-start">
+        <div class="flex-shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-yellow-600" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-lg font-semibold text-yellow-800">Testing Environment</h3>
+          <div class="mt-2 text-sm text-yellow-700 space-y-2">
+            <p>• This is a testing environment for the fall detection system</p>
+            <p>• All alerts created here will be marked as "test_upload" or "live_camera"</p>
+            <p>• Test alerts can be acknowledged without affecting real statistics</p>
+            <p>• Camera detection runs every 2 seconds to prevent spam alerts</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
-{# ────────────────────────────────────────────────────────────────────────── #}
-{# NOTE : On importe Mediapipe Tasks‐Vision depuis un CDN, pas un import “bare”  #}
-{# ────────────────────────────────────────────────────────────────────────── #}
+<!-- JavaScript for Enhanced Functionality -->
 <script type="module">
-  console.log("🔴 test_detection.js has démarré (module).");
+  console.log("🔴 Enhanced test_detection.js started");
 
-  // Import Mediapipe Tasks-Vision depuis le CDN
+  // Import Mediapipe Tasks-Vision
   import {
     FilesetResolver,
     PoseLandmarker
   } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0";
+
   let showPose = true;
-
-  document.getElementById('togglePose').addEventListener('click', () => {
-      showPose = !showPose;
-  });
-  // Récupération des éléments du DOM
-  let videoElement    = document.getElementById("videoElement");
-  let canvas          = document.getElementById("outputCanvas");
-  let ctx             = canvas.getContext("2d");
-  let startButton     = document.getElementById("startCamera");
-  let statusDiv       = document.getElementById("status");
+  let videoElement = document.getElementById("videoElement");
+  let canvas = document.getElementById("outputCanvas");
+  let ctx = canvas.getContext("2d");
+  let startButton = document.getElementById("startCamera");
+  let statusDiv = document.getElementById("status");
   let detectionStatus = document.getElementById("detectionStatus");
+  let statusIndicator = document.getElementById("statusIndicator");
+  let noCameraMessage = document.getElementById("noCameraMessage");
+  
+  let stream = null;
+  let poseLandmarker = null;
+  let isProcessing = false;
+  let isCameraActive = false;
 
-  let stream          = null;
-  let poseLandmarker  = null;
-  let isProcessing    = false;
+  // Hidden canvas for YOLO processing
+  let hiddenCanvas = document.createElement("canvas");
+  let hiddenCtx = hiddenCanvas.getContext("2d");
 
-  // Canvas caché pour capturer l’image complète à envoyer à YOLO
-  let hiddenCanvas  = document.createElement("canvas");
-  let hiddenCtx     = hiddenCanvas.getContext("2d");
-
-  // Intervalle minimum (en ms) entre deux envois au serveur YOLO
   const YOLO_INTERVAL = 2000;
-  let lastYoloTime    = 0;
+  let lastYoloTime = 0;
 
-  // 1) Initialisation de PoseLandmarker (Mediapipe Tasks-Vision)
+  // Update status indicators
+  function updateStatus(message, isActive = false, isDetecting = false) {
+    detectionStatus.textContent = message;
+    
+    if (isDetecting) {
+      statusIndicator.className = "w-3 h-3 rounded-full bg-red-500 mr-3 animate-pulse";
+      statusDiv.style.display = "block";
+      statusDiv.textContent = "Fall Detected!";
+    } else if (isActive) {
+      statusIndicator.className = "w-3 h-3 rounded-full bg-green-500 mr-3";
+      statusDiv.style.display = "none";
+    } else {
+      statusIndicator.className = "w-3 h-3 rounded-full bg-gray-400 mr-3";
+      statusDiv.style.display = "none";
+    }
+  }
+
+  // Initialize PoseLandmarker
   async function createPoseLandmarker() {
-    const vision = await FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
-    );
-
-    poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath:
-          "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
-        delegate: "GPU"
-      },
-      runningMode: "VIDEO"
-    });
-
-    console.log("✅ PoseLandmarker ready.");
-    detectionStatus.textContent = "PoseLandmarker chargé ; démarrage de la caméra…";
-    startCamera();
-  }
-  function updateStatus(statusText) {
-      if (statusText && statusText.trim() !== "") {
-          statusDiv.textContent = statusText;
-          statusDiv.style.display = "block";  // Affiche la div
-      } else {
-          statusDiv.style.display = "none";   // Cache la div si vide ou null
-      }
-  }
-  // 2) Démarrer la caméra (getUserMedia + play)
-  async function startCamera() {
     try {
-      console.log("➔ getUserMedia() en cours…");
-      stream = await navigator.mediaDevices.getUserMedia({ video: true });
-      console.log("➔ getUserMedia() OK");
-
-      videoElement.srcObject = stream;
-      await videoElement.play();
-      console.log("➔ videoElement.play() OK");
-
-      // Ajuster la taille du canvas visible
-      canvas.width  = videoElement.clientWidth  || 640;
-      canvas.height = videoElement.clientHeight || 360;
-
-      // Ajuster la taille du canvas caché en résolution native
-      hiddenCanvas.width  = videoElement.videoWidth  || 640;
-      hiddenCanvas.height = videoElement.videoHeight || 360;
-
-      startButton.textContent = "Stop Camera";
-      statusDiv.style.display = "none";
-
-      detectPoses();
-    } catch (err) {
-      console.error("❌ startCamera() getUserMedia erreur :", err);
-      detectionStatus.textContent = "Erreur caméra : " + err.message;
-    }
-  }
-
-  // 3) Arrêter la caméra
-  function stopCamera() {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-      videoElement.srcObject = null;
-      startButton.textContent = "Start Camera";
-      statusDiv.style.display = "none";
-      isProcessing = false;
-    }
-  }
-
-  // 4) Boucle principale : détecter la pose et envoyer toutes les YOLO_INTERVAL ms
-  async function detectPoses() {
-    if (!stream || isProcessing) return;
-    isProcessing = true;
-
-    while (videoElement.srcObject) {
-      // 4a) PoseLandmarker sur chaque frame
-      const result = await poseLandmarker.detectForVideo(
-        videoElement,
-        performance.now()
+      updateStatus("Loading pose detection model...");
+      
+      const vision = await FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
       );
 
-      if (
-        result.landmarks &&
-        Array.isArray(result.landmarks) &&
-        result.landmarks.length > 0
-      ) {
-        const singleLandmarks = result.landmarks[0];
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawLandmarks(singleLandmarks);
-      }
+      poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task",
+          delegate: "GPU"
+        },
+        runningMode: "VIDEO"
+      });
 
-      // 4b) Toutes les YOLO_INTERVAL ms, on envoie une image au serveur YOLO
-      const now = performance.now();
-      if (now - lastYoloTime > YOLO_INTERVAL) {
-        lastYoloTime = now;
-        sendFrameToYolo();
-      }
+      updateStatus("PoseLandmarker ready - Click Start Camera");
+      console.log("✅ PoseLandmarker ready");
+    } catch (error) {
+      console.error("❌ PoseLandmarker initialization error:", error);
+      updateStatus("Error loading pose detection model");
+    }
+  }
 
-      await new Promise((r) => requestAnimationFrame(r));
+  // Start camera
+  async function startCamera() {
+    try {
+      updateStatus("Starting camera...");
+      
+      stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { width: 640, height: 480 } 
+      });
+      
+      videoElement.srcObject = stream;
+      await videoElement.play();
+      
+      // Update canvas sizes
+      canvas.width = videoElement.clientWidth || 640;
+      canvas.height = videoElement.clientHeight || 360;
+      hiddenCanvas.width = videoElement.videoWidth || 640;
+      hiddenCanvas.height = videoElement.videoHeight || 360;
+
+      // Update UI
+      startButton.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+        </svg>
+        Stop Camera
+      `;
+      
+      noCameraMessage.style.display = "none";
+      isCameraActive = true;
+      updateStatus("Camera active - Detecting poses and falls", true);
+      
+      detectPoses();
+    } catch (error) {
+      console.error("❌ Camera start error:", error);
+      updateStatus("Camera access denied or unavailable");
+    }
+  }
+
+  // Stop camera
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      videoElement.srcObject = null;
+      
+      startButton.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+        </svg>
+        Start Camera
+      `;
+      
+      noCameraMessage.style.display = "flex";
+      isCameraActive = false;
+      isProcessing = false;
+      updateStatus("Camera stopped");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  // Main detection loop
+  async function detectPoses() {
+    if (!stream || isProcessing || !isCameraActive) return;
+    isProcessing = true;
+
+    while (videoElement.srcObject && isCameraActive) {
+      try {
+        // Pose detection
+        if (poseLandmarker) {
+          const result = await poseLandmarker.detectForVideo(
+            videoElement,
+            performance.now()
+          );
+
+          if (result.landmarks && result.landmarks.length > 0) {
+            const singleLandmarks = result.landmarks[0];
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (showPose) {
+              drawLandmarks(singleLandmarks);
+            }
+          }
+        }
+
+        // YOLO detection (every YOLO_INTERVAL ms)
+        const now = performance.now();
+        if (now - lastYoloTime > YOLO_INTERVAL) {
+          lastYoloTime = now;
+          await sendFrameToYolo();
+        }
+
+        await new Promise(resolve => requestAnimationFrame(resolve));
+      } catch (error) {
+        console.error("❌ Detection loop error:", error);
+        break;
+      }
     }
 
     isProcessing = false;
   }
 
-  // 5) Capturer la frame dans le canvas caché et envoyer au backend
-  function sendFrameToYolo() {
+  // Send frame to YOLO
+  async function sendFrameToYolo() {
     try {
-      // 5a) On dessine la vidéo dans le canvas caché
-      hiddenCtx.drawImage(
-        videoElement,
-        0,
-        0,
-        hiddenCanvas.width,
-        hiddenCanvas.height
-      );
-
-      // 5b) On récupère la chaîne base64 (JPEG)
+      hiddenCtx.drawImage(videoElement, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
       const dataUrl = hiddenCanvas.toDataURL("image/jpeg", 0.8);
-      // Extraire uniquement la partie après la virgule
-      const base64String = dataUrl.split(",", 2)[1];
+      const base64String = dataUrl.split(",")[1];
 
-      // 5c) Appel POST vers /detection/run-yolo/
-      fetch("{% url 'detection:run_yolo' %}", {
+      const response = await fetch("{% url 'detection:run_yolo' %}", {
         method: "POST",
-        credentials: "same-origin",    // ← essentiel pour envoyer le cookie de session
+        credentials: "same-origin",
         headers: {
           "Content-Type": "application/json",
           "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
         },
         body: JSON.stringify({ image: base64String })
-      })
-        .then((res) => {
-          if (!res.ok) {
-            console.error("KO /run-yolo/ status :", res.status);
-            return res.json().then((err) => console.error(err));
-          }
-          return res.json();
-        })
-        .then((data) => {
-          if (data && data.fall) {
-            // Si YOLO a détecté une chute :
-            statusDiv.style.display = "block";
+      });
 
-            const confidenceValue = data.confidence ? (data.confidence * 100).toFixed(1) : "N/A";
-            detectionStatus.textContent = `Fall detected! Confidence: ${confidenceValue}%`;
-            updateStatus(detectionStatus.textContent);
-            console.log("✅ Chute détectée avec confiance :", confidenceValue);
-            // 5d) Créer l’alerte en base via create-alert
-            fetch("{% url 'detection:create_alert' %}", {
-              method: "POST",
-              credentials: "same-origin",  // ← ici aussi pour la session
-              headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
-              },
-              body: JSON.stringify({
-                type: "live_camera",
-                description: "Fall detected via YOLOv8 (Confidence: ${confidenceValue}%)"
-              })
-            }).then((r) => {
-              if (r.ok) {
-                detectionStatus.textContent = "Fall alert created !";
-                setTimeout(() => {
-                  detectionStatus.textContent = "";
-                  statusDiv.style.display = "none";
-                }, 3000);
+      if (!response.ok) {
+        console.error("YOLO API error:", response.status);
+        return;
+      }
+
+      const data = await response.json();
+      
+      if (data && data.fall) {
+        updateStatus(`Fall detected! Confidence: ${(data.confidence * 100).toFixed(1)}%`, true, true);
+        
+        // Create alert
+        fetch("{% url 'detection:create_alert' %}", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+          },
+          body: JSON.stringify({
+            type: "live_camera",
+            description: "Fall detected via YOLOv8",
+            yolo_confidence: data.confidence,
+            yolo_class: "Fall-Detected",
+            snapshot_b64: dataUrl
+          })
+        }).then(r => {
+          if (r.ok) {
+            setTimeout(() => {
+              if (isCameraActive) {
+                updateStatus("Camera active - Monitoring for falls", true);
               }
-            });
+            }, 3000);
           }
-        })
-        .catch((err) => {
-          console.error("❌ Erreur appel /run-yolo/ :", err);
         });
-    } catch (err) {
-      console.error("❌ sendFrameToYolo erreur :", err);
+      }
+    } catch (error) {
+      console.error("❌ YOLO processing error:", error);
     }
   }
 
-  // 6) Fonction pour dessiner les landmarks Mediapipe
+  // Draw pose landmarks
   function drawLandmarks(landmarks) {
     if (!showPose) return;
+    
     ctx.strokeStyle = "#10B981";
     ctx.lineWidth = 2;
+    
     const connections = [
-      [11, 12], [11, 13], [13, 15],
-      [12, 14], [14, 16], [11, 23],
-      [12, 24], [23, 24], [23, 25],
-      [25, 27], [24, 26], [26, 28]
+      [11, 12], [11, 13], [13, 15], [12, 14], [14, 16],
+      [11, 23], [12, 24], [23, 24], [23, 25], [25, 27],
+      [24, 26], [26, 28]
     ];
-    for (const [s, e] of connections) {
+    
+    for (const [start, end] of connections) {
       ctx.beginPath();
-      ctx.moveTo(
-        landmarks[s].x * canvas.width,
-        landmarks[s].y * canvas.height
-      );
-      ctx.lineTo(
-        landmarks[e].x * canvas.width,
-        landmarks[e].y * canvas.height
-      );
+      ctx.moveTo(landmarks[start].x * canvas.width, landmarks[start].y * canvas.height);
+      ctx.lineTo(landmarks[end].x * canvas.width, landmarks[end].y * canvas.height);
       ctx.stroke();
     }
+    
     ctx.fillStyle = "#059669";
-    for (const lm of landmarks) {
+    for (const landmark of landmarks) {
       ctx.beginPath();
-      ctx.arc(
-        lm.x * canvas.width,
-        lm.y * canvas.height,
-        4,
-        0,
-        2 * Math.PI
-      );
+      ctx.arc(landmark.x * canvas.width, landmark.y * canvas.height, 4, 0, 2 * Math.PI);
       ctx.fill();
     }
   }
 
-  // 7) Événement clic sur le bouton pour activer/désactiver la caméra
-  startButton.addEventListener("click", () => {
-    if (stream) stopCamera();
-    else startCamera();
+  // Event listeners
+  document.getElementById('togglePose').addEventListener('click', () => {
+    showPose = !showPose;
+    if (!showPose) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
   });
 
-  // 8) Au chargement de la page, on initialise Mediapipe + on lance la caméra
+  startButton.addEventListener("click", () => {
+    if (isCameraActive) {
+      stopCamera();
+    } else {
+      startCamera();
+    }
+  });
+
+  // Initialize on page load
   window.addEventListener("DOMContentLoaded", () => {
-    createPoseLandmarker().catch((err) => {
-      console.error("❌ Impossible d'initialiser PoseLandmarker :", err);
-      detectionStatus.textContent = "Erreur chargement PoseLandmarker : " + err.message;
+    createPoseLandmarker().catch(error => {
+      console.error("❌ Initialization failed:", error);
+      updateStatus("Failed to initialize pose detection");
     });
   });
 </script>
 
-{% endblock %}
+<!-- File upload handling -->
+<script>
+  // File name display
+  const fileInput = document.getElementById('id_upload_file');
+  const fileNameDisplay = document.getElementById('file-name');
+  
+  if (fileInput) {
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (file) {
+        fileNameDisplay.textContent = `Selected: ${file.name}`;
+        fileNameDisplay.className = "mt-4 text-sm font-medium text-[#2C6E6B] bg-[#F4EDE8] px-3 py-1 rounded-full inline-block";
+      } else {
+        fileNameDisplay.textContent = '';
+        fileNameDisplay.className = "mt-4 text-sm font-medium text-[#2C6E6B]";
+      }
+    });
+  }
 
+  // Reset form functionality
+  const resetBtn = document.getElementById('resetForm');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', () => {
+      document.getElementById('previewCard').style.display = 'none';
+      document.getElementById('uploadCard').style.display = 'block';
+      fileInput.value = '';
+      fileNameDisplay.textContent = '';
+    });
+  }
+
+  // Drag and drop functionality
+  const uploadArea = document.querySelector('[class*="border-dashed"]');
+  if (uploadArea) {
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      uploadArea.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      uploadArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      uploadArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+      uploadArea.classList.add('border-[#2C6E6B]', 'bg-[#F4EDE8]');
+    }
+
+    function unhighlight(e) {
+      uploadArea.classList.remove('border-[#2C6E6B]', 'bg-[#F4EDE8]');
+    }
+
+    uploadArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      
+      if (files.length > 0) {
+        fileInput.files = files;
+        const event = new Event('change', { bubbles: true });
+        fileInput.dispatchEvent(event);
+      }
+    }
+  }
+</script>
+
+{% endblock %}
