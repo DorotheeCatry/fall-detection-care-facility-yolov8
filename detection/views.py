@@ -276,13 +276,17 @@ class TestDetectionView(LoginRequiredMixin, FormView):
             img_b64 = base64.b64encode(buf).decode()
 
             # --- 6. if fall → create test alert in DB ---
+                # 1️⃣ create the alert record
             if fall_detected:
-                FallAlert.objects.create(
+                alert = FallAlert.objects.create(
                     detected_by    = "test_upload",
                     description    = description or f"Test upload: {upload.name}",
                     yolo_confidence= confidence,
                     yolo_class     = "Fall-Detected",
                 )
+                # 2️⃣ persist the original frame as the snapshot
+                alert.save_snapshot_from_frame(frame)
+                alert.save()
                 messages.success(self.request, "Fall detected ! Alerte créée.")
             else:
                 messages.info(self.request, "Aucune chute détectée pour ce fichier.")

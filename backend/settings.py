@@ -145,3 +145,9 @@ LOGIN_REDIRECT_URL = "detection:alerts"
 LOGOUT_REDIRECT_URL = "accounts:login"
 
 CAMERA_RTSP_URL = "rtsp://your_camera_url"
+
+# Media files settings
+MEDIA_URL  = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+# allow same-origin iframes:
+X_FRAME_OPTIONS = "SAMEORIGIN"
