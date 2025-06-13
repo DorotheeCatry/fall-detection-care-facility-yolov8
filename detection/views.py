@@ -6,6 +6,9 @@ import json
 import base64
 import cv2
 import numpy as np
+import datetime
+import uuid
+from datetime import timedelta
 
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic import ListView, FormView, TemplateView, RedirectView, View
@@ -15,9 +18,13 @@ from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.cache import cache
+
 from .models import FallAlert
 from .forms import TestDetectionForm
 from .services import FallDetectionService
+from .services import VideoClipService
 
 # Instanciation globale du service pour éviter de recharger le modèle à chaque requête
 fall_service = FallDetectionService(conf_threshold=0.50)
@@ -194,9 +201,11 @@ class TestDetectionView(LoginRequiredMixin, FormView):
 
 class CreateAlertView(LoginRequiredMixin, View):
     """
-    CBV qui crée un FallAlert à partir d'un POST JSON JavaScript (live detection).
-    On gère les champs yolo_confidence, yolo_class, metadata, snapshot, et clip vidéo.
+    Crée ou met à jour un FallAlert live_camera,
+    throttle : pas plus d’une nouvelle alerte toutes les THRESHOLD secondes.
+    Gère yolo_confidence, yolo_class, description, snapshot_b64, et clip vidéo.
     """
+    THRESHOLD = timedelta(seconds=30)
 
     def post(self, request, *args, **kwargs):
         # 1. Charger le JSON du body
@@ -205,62 +214,95 @@ class CreateAlertView(LoginRequiredMixin, View):
         except json.JSONDecodeError:
             return HttpResponseBadRequest("Invalid JSON")
 
-        # 2. Extraire ce qu'on attend :
-        alert_type     = payload.get("type", "live_camera")
-        description    = payload.get("description", "")
-        yolo_conf      = payload.get("yolo_confidence")
-        yolo_cls       = payload.get("yolo_class")
-        metadata_json  = payload.get("metadata")
-        snapshot_b64   = payload.get("snapshot_b64")
-        create_clip    = True#payload.get("make_clip")
+        alert_type   = payload.get("type", "live_camera")
+        description  = payload.get("description", "")
+        yolo_conf    = payload.get("yolo_confidence")
+        yolo_cls     = payload.get("yolo_class", "")
+        metadata     = payload.get("metadata")
+        snapshot_b64 = payload.get("snapshot_b64")
+        make_clip    = payload.get("make_clip", False)
 
-        # 3. Créer un objet sans le sauvegarder immédiatement
-        new_alert = FallAlert(
-            detected_by     = alert_type,
-            description     = description,
-            yolo_confidence = yolo_conf,
-            yolo_class      = yolo_cls or "",
-            metadata        = metadata_json
-        )
+        now = timezone.now()
 
-        # 4. Si le client JS envoie un snapshot en base64, on l’assigne :
-        if snapshot_b64:
-            import base64, uuid
-            from django.core.files.base import ContentFile
-
-            header, data = snapshot_b64.split(",", 1)
-            try:
-                decoded = base64.b64decode(data)
-            except (ValueError, TypeError):
-                decoded = None
-
-            if decoded:
-                filename = f"{uuid.uuid4().hex}.jpg"
-                new_alert.image_snapshot.save(filename, ContentFile(decoded), save=False)
-
-        # 5. Sauvegarde initiale pour générer un ID (nécessaire si on fait un clip)
-        try:
-            new_alert.save()
-        except Exception as e:
-            return JsonResponse(
-                {"status": "error", "message": f"Could not create alert: {str(e)}"},
-                status=400,
+        # 2. Si c'est un live_camera, voir si on dépasse le seuil de throttle
+        if alert_type == "live_camera":
+            last = (
+                FallAlert.objects
+                         .filter(detected_by="live_camera")
+                         .order_by("-timestamp")
+                         .first()
             )
+            if last and (now - last.timestamp) < self.THRESHOLD:
+                # réutiliser la même alerte
+                alert = last
+                alert.yolo_confidence = yolo_conf
+                alert.yolo_class      = yolo_cls
+                alert.description     = "Fall detected via YOLOv8"
+                alert.metadata        = metadata
+                alert.save()
 
-        # 6. (Optionnel) si on veut générer un clip vidéo autour du timestamp
-        if create_clip:
-            from django.conf import settings
-            clip_service = VideoClipService(settings.CAMERA_RTSP_URL)
-            unix_ts = new_alert.timestamp.timestamp()
-            clip_service.attach_clip_to_alert(new_alert, start_time=unix_ts, duration=10.0)
+                # snapshot, si fourni
+                if snapshot_b64:
+                    self._attach_snapshot(alert, snapshot_b64)
 
-        # 7. Retourner l'ID créé
-        return JsonResponse({"status": "success", "alert_id": new_alert.id}, status=201)
+                # clip, si demandé
+                if make_clip:
+                    self._attach_clip(alert)
+
+                return JsonResponse({"status":"updated","alert_id":alert.id}, status=200)
+
+        # 3. Sinon, créer une nouvelle alerte
+        alert = FallAlert(
+            detected_by     = alert_type,
+            description     = description or ("Fall detected via YOLOv8"
+                                              if alert_type=="live_camera" else ""),
+            yolo_confidence = yolo_conf,
+            yolo_class      = yolo_cls,
+            metadata        = metadata,
+        )
+        alert.save()
+
+        # 4. Attacher snapshot
+        if snapshot_b64:
+            self._attach_snapshot(alert, snapshot_b64)
+
+        # 5. Attacher clip vidéo si demandé
+        if make_clip:
+            self._attach_clip(alert)
+
+        return JsonResponse({"status":"created","alert_id":alert.id}, status=201)
+
+    def _attach_snapshot(self, alert: FallAlert, b64: str) -> None:
+        """
+        Decode base64 snapshot and save to alert.image_snapshot.
+        """
+        try:
+            header, data = b64.split(",", 1)
+            decoded = base64.b64decode(data)
+        except (ValueError, TypeError):
+            return
+
+        filename = f"{uuid.uuid4().hex}.jpg"
+        django_file = ContentFile(decoded, name=filename)
+        alert.image_snapshot.save(filename, django_file, save=True)
+
+    def _attach_clip(self, alert: FallAlert) -> None:
+        """
+        Use VideoClipService to attach a short video clip around alert.timestamp.
+        """
+        from django.conf import settings
+        clip_service = VideoClipService(settings.CAMERA_RTSP_URL)
+        ts = alert.timestamp.timestamp()
+        clip_service.attach_clip_to_alert(alert, start_time=ts, duration=10.0)
 
 class RunYoloView(View):
     """
-    Reçoit en POST une image Base64 (sans préfixe), lève un bool fall=True/False.
+    Reçoit en POST une image Base64 (sans préfixe), lève un bool fall=True/False
+    et throttle la création d’alertes live_camera.
     """
+    THRESHOLD_SECS = 30         # ne pas recréer plus souvent qu’une fois tous les 30s
+    CACHE_KEY      = "last_live_alert_ts"
+
     def post(self, request, *args, **kwargs):
         try:
             payload = json.loads(request.body.decode("utf-8"))
@@ -272,7 +314,6 @@ class RunYoloView(View):
             return JsonResponse({"error": "No image provided"}, status=400)
 
         try:
-            # Ici, base64_data est la chaîne après la virgule (pure base64 jpeg)
             img_bytes = base64.b64decode(base64_data)
             nparr = np.frombuffer(img_bytes, np.uint8)
             img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
@@ -286,17 +327,34 @@ class RunYoloView(View):
         except Exception as e:
             return JsonResponse({"error": f"YOLO inference error: {str(e)}"}, status=500)
 
-        if fall_detected:
-            # 1. Créer une alerte (sans vidéo)
-            alert = FallAlert.objects.create(
-                yolo_confidence=confidence,
-                description="Chute détectée via YOLO"
-            )
-
-            # 2. Sauvegarder la frame actuelle en snapshot dans l'alerte
-            alert.save_snapshot_from_frame(img)
-            alert.save()  # Important pour enregistrer l'image dans la base
-            
-            return JsonResponse({"fall": fall_detected, "confidence": confidence}, status=200)
-        else:
+        if not fall_detected:
             return JsonResponse({"fall": False}, status=200)
+
+        now = timezone.now()
+        last_ts = cache.get(self.CACHE_KEY)
+        reuse = last_ts and (now.timestamp() - last_ts) < self.THRESHOLD_SECS
+
+        if reuse:
+            alert = (
+                FallAlert.objects
+                         .filter(detected_by="live_camera")
+                         .order_by("-timestamp")
+                         .first()
+            )
+            if alert:
+                alert.yolo_confidence = confidence
+                alert.save()
+                alert.save_snapshot_from_frame(img)
+                alert.save()
+        else:
+            alert = FallAlert.objects.create(
+                detected_by     = "live_camera",
+                description     = "Fall detected via YOLOv8",
+                yolo_confidence = confidence,
+                yolo_class      = "Fall-Detected",
+            )
+            alert.save_snapshot_from_frame(img)
+            alert.save()
+            cache.set(self.CACHE_KEY, now.timestamp(), timeout=None)
+
+        return JsonResponse({"fall": True, "confidence": confidence}, status=200)

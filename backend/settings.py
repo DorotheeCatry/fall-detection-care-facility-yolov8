@@ -143,3 +143,5 @@ TAILWIND_APP_NAME = 'theme'
 #Redirect URL after login
 LOGIN_REDIRECT_URL = "detection:alerts"
 LOGOUT_REDIRECT_URL = "accounts:login"
+
+CAMERA_RTSP_URL = "rtsp://your_camera_url"
