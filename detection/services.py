@@ -100,9 +100,51 @@ class VideoClipService:
         return filename, data
 
     def attach_clip_to_alert(self, alert: FallAlert, start_time: float, duration: float = 10.0):
-        """
-        Extrait un clip autour de `start_time` et le sauvegarde dans `alert.video_clip`.
-        """
-        filename, data = self.extract_clip(start_time, duration)
+        """cap = cv2.VideoCapture(self.source_url)
+        if not cap.isOpened():
+            raise RuntimeError("Impossible d'ouvrir le flux vidéo")
+
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        if fps <= 0:
+            fps = 25.0  # valeur par défaut
+
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        temp_file = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
+        filename = os.path.basename(temp_file.name)
+
+        # Lire la première frame pour connaître la taille
+        ret, frame = cap.read()
+        if not ret:
+            cap.release()
+            temp_file.close()
+            raise RuntimeError("Impossible de lire une frame du flux")
+
+        height, width = frame.shape[:2]
+        out = cv2.VideoWriter(temp_file.name, fourcc, fps, (width, height))
+
+        # Écrire la première frame
+        out.write(frame)
+
+        # Calculer nombre frames à écrire
+        frames_to_write = int(duration * fps) - 1  # une frame déjà écrite
+        for _ in range(frames_to_write):
+            ret, frame = cap.read()
+            if not ret:
+                break
+            out.write(frame)
+
+        cap.release()
+        out.release()
+
+        with open(temp_file.name, "rb") as f:
+            data = f.read()
+
+        try:
+            os.unlink(temp_file.name)
+        except OSError:
+            pass
+
         alert.video_clip.save(filename, ContentFile(data), save=True)
+"""
+        pass
 
