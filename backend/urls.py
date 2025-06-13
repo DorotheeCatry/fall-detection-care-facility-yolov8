@@ -18,10 +18,15 @@ from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
 
+
+
+def redirect_to_dashboard(request):
+    return redirect('detection:dashboard')
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("accounts/", include("accounts.urls", namespace="accounts")),
-    path("", lambda request: redirect("detection:alerts"), name="home"),
+    path("", lambda request: redirect("detection:dashboard"), name="home"),
     path("detection/", include("detection.urls", namespace="detection")),
     # … other includes …
     path("__reload__/", include("django_browser_reload.urls")),  # if using live-reload

@@ -3,376 +3,399 @@
 {% block title %}Fall Alerts Dashboard{% endblock %}
 
 {% block content %}
-<div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-  <h1 class="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">Fall Alerts Dashboard</h1>
-  <a href="{% url 'detection:test_detection' %}" class="btn-primary flex items-center">
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2"
-         viewBox="0 0 20 20" fill="currentColor">
-      <path fill-rule="evenodd"
-            d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-            clip-rule="evenodd" />
-    </svg>
-    Test Detection
-  </a>
-</div>
-
-{% if messages %}
-  <div class="mb-6">
-    {% for message in messages %}
-      <div class="p-4 {% if message.tags == 'success' %}bg-green-50 text-green-800 border border-green-200
-                       {% elif message.tags == 'error'   %}bg-red-50   text-red-800   border border-red-200
-                       {% else                        %}bg-blue-50  text-blue-800  border border-blue-200{% endif %} rounded-md mb-2">
-        {{ message }}
+<div class="bg-gradient-to-br from-[#2C6E6B] to-[#CBD4C2] min-h-screen">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    
+    <!-- Header Section -->
+    <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center">
+      <div>
+        <h1 class="text-3xl font-bold text-[#2C6E6B] mb-2">Fall Alerts Dashboard</h1>
+        <p class="text-[#F4EDE8] text-lg">Monitor and manage fall detection alerts</p>
       </div>
-    {% endfor %}
-  </div>
-{% endif %}
-
-<form method="get" class="mb-6 flex flex-wrap gap-4 items-center">
-  <label class="inline-flex items-center text-sm text-gray-700">
-    <input type="checkbox"
-           name="include_tests"
-           value="1"
-           class="form-checkbox"
-           {% if include_tests %}checked{% endif %}
-           onchange="this.form.submit()">
-    <span class="ml-2">Include Test Uploads</span>
-  </label>
-  <label>
-    <span class="text-xs text-gray-600">Date:</span>
-    <input type="date" name="date" value="{{ request.GET.date }}" class="form-input text-xs px-2 py-1 border rounded" onchange="this.form.submit()">
-  </label>
-  <label>
-    <span class="text-xs text-gray-600">Hour:</span>
-    <input type="time" name="hour" value="{{ request.GET.hour }}" class="form-input text-xs px-2 py-1 border rounded" onchange="this.form.submit()">
-  </label>
-  <label>
-    <span class="text-xs text-gray-600">Detected By:</span>
-    <select name="detected_by" multiple class="form-select text-xs px-2 py-1 border rounded" onchange="this.form.submit()">
-      {% for val in detected_by_options %}
-        <option value="{{ val }}" {% if val in detected_by_selected %}selected{% endif %}>{{ val }}</option>
-      {% endfor %}
-    </select>
-  </label>
-  <label>
-    <span class="text-xs text-gray-600">Status:</span>
-    <select name="status" multiple class="form-select text-xs px-2 py-1 border rounded" onchange="this.form.submit()">
-      <option value="acknowledged" {% if 'acknowledged' in status_selected %}selected{% endif %}>Acknowledged</option>
-      <option value="new" {% if 'new' in status_selected %}selected{% endif %}>New</option>
-    </select>
-  </label>
-  <button type="submit" class="btn-primary text-xs px-3 py-1">Apply</button>
-  <a href="{% url 'detection:alerts' %}" class="btn-secondary text-xs px-3 py-1">Reset Filters</a>
-</form>
-
-{% if alerts %}
-  <div class="bg-white shadow-md rounded-lg overflow-hidden mb-6">
-    <div class="overflow-x-auto">
-      <table id="alerts-table" class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable">
-              <a href="?sort=timestamp&order={% if request.GET.sort == 'timestamp' and request.GET.order == 'asc' %}desc{% else %}asc{% endif %}{% for key, value in request.GET.items %}{% if key != 'sort' and key != 'order' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="flex flex-col items-start">
-                Timestamp
-                <span>
-                  <span class="block text-xs {% if request.GET.sort == 'timestamp' and request.GET.order == 'asc' %}text-blue-600{% endif %}">▲</span>
-                  <span class="block text-xs {% if request.GET.sort == 'timestamp' and request.GET.order == 'desc' %}text-blue-600{% endif %}">▼</span>
-                </span>
-              </a>
-            </th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable">
-              Detected By
-              <span class="sort-arrows">
-                <span class="arrow-up" style="cursor:pointer;">▲</span>
-                <span class="arrow-down" style="cursor:pointer;">▼</span>
-              </span>
-            </th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable">
-              Description
-              <span class="sort-arrows">
-                <span class="arrow-up" style="cursor:pointer;">▲</span>
-                <span class="arrow-down" style="cursor:pointer;">▼</span>
-              </span>
-            </th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable">
-              Confidence
-              <span class="sort-arrows">
-                <span class="arrow-up" style="cursor:pointer;">▲</span>
-                <span class="arrow-down" style="cursor:pointer;">▼</span>
-              </span>
-            </th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sortable">
-              Status
-              <span class="sort-arrows">
-                <span class="arrow-up" style="cursor:pointer;">▲</span>
-                <span class="arrow-down" style="cursor:pointer;">▼</span>
-              </span>
-            </th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Action
-            </th>
-          </tr>
-          <tr class="bg-gray-100">
-            <th class="px-6 py-2">
-              <select data-col="0" class="form-select w-full text-xs filter-dropdown"><option value="">All</option></select>
-            </th>
-            <th class="px-6 py-2">
-              <select data-col="1" class="form-select w-full text-xs filter-dropdown"><option value="">All</option></select>
-            </th>
-            <th class="px-6 py-2">
-              <select data-col="2" class="form-select w-full text-xs filter-dropdown"><option value="">All</option></select>
-            </th>
-            <th class="px-6 py-2">
-              <select data-col="3" class="form-select w-full text-xs filter-dropdown"><option value="">All</option></select>
-            </th>
-            <th class="px-6 py-2">
-              <select data-col="4" class="form-select w-full text-xs filter-dropdown"><option value="">All</option></select>
-            </th>
-            <th class="px-6 py-2"></th>
-          </tr>
-        </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
-          {% for alert in alerts %}
-            <tr class="{% if not alert.acknowledged %}bg-red-50 bg-opacity-30{% endif %}">
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {{ alert.timestamp|date:"Y-m-d H:i" }}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {% if alert.detected_by == 'live_camera' %}
-                  <span class="inline-flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         class="h-4 w-4 mr-1 text-blue-500"
-                         viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6z
-                               M14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7
-                               a1 1 0 00-1.447-.894l-2 1z" />
-                    </svg>
-                    Live Camera
-                  </span>
-                {% elif alert.detected_by == 'test_upload' %}
-                  <span class="inline-flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         class="h-4 w-4 mr-1 text-purple-500"
-                         viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd"
-                            d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z
-                               M6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3
-                               a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414
-                               L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                    </svg>
-                    Test Upload
-                  </span>
-                {% else %}
-                  {{ alert.detected_by|default:"–" }}
-                {% endif %}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {% if alert.detected_by == 'live_camera' %}
-                  Fall detected via YOLOv8
-                {% else %}
-                  {{ alert.description|default:"–" }}
-                {% endif %}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {% if alert.yolo_confidence is not None %}
-                  {{ alert.yolo_confidence|floatformat:1 }}%
-                {% else %}
-                  –
-                {% endif %}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                {% if alert.acknowledged %}
-                  <span class="badge-acknowledged">Acknowledged</span>
-                {% else %}
-                  <span class="badge-new">New</span>
-                {% endif %}
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-sm">
-                {% if not alert.acknowledged %}
-                  <form method="post" action="{% url 'detection:acknowledge_alert' alert.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn-success text-sm">Acknowledge</button>
-                  </form>
-                {% else %}
-                  <span class="text-gray-400">—</span>
-                {% endif %}
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+      <div class="flex gap-3 mt-4 sm:mt-0">
+        <a href="{% url 'detection:test_detection' %}" 
+           class="inline-flex items-center px-6 py-3 bg-[#E07A5F] hover:bg-[#c56a52] text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+          </svg>
+          Test Detection
+        </a>
+        <a href="#" onclick="window.location.reload()" 
+           class="inline-flex items-center px-4 py-3 bg-[#FAF9F6] hover:bg-[#F4EDE8] text-[#2C6E6B] font-semibold rounded-lg shadow-lg transition-all duration-200">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+          </svg>
+          Refresh
+        </a>
+      </div>
     </div>
-  </div>
 
-  {% if is_paginated %}
-    <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 rounded-lg shadow-sm">
-      <div class="flex flex-1 justify-between sm:hidden">
-        {% if page_obj.has_previous %}
-          <a href="?page={{ page_obj.previous_page_number }}{% if include_tests %}&include_tests=1{% endif %}"
-             class="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            Previous
-          </a>
-        {% else %}
-          <span class="inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-500">
-            Previous
-          </span>
-        {% endif %}
-        {% if page_obj.has_next %}
-          <a href="?page={{ page_obj.next_page_number }}{% if include_tests %}&include_tests=1{% endif %}"
-             class="ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
-            Next
-          </a>
-        {% else %}
-          <span class="ml-3 inline-flex items-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-500">
-            Next
-          </span>
-        {% endif %}
+    <!-- Messages -->
+    {% if messages %}
+      <div class="mb-6 space-y-3">
+        {% for message in messages %}
+          <div class="p-4 rounded-lg shadow-lg {% if message.tags == 'success' %}bg-green-50 text-green-800 border-l-4 border-green-400
+                         {% elif message.tags == 'error' %}bg-red-50 text-red-800 border-l-4 border-red-400
+                         {% else %}bg-blue-50 text-blue-800 border-l-4 border-blue-400{% endif %}">
+            <div class="flex items-center">
+              <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                {% if message.tags == 'success' %}
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                {% elif message.tags == 'error' %}
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                {% else %}
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                {% endif %}
+              </svg>
+              {{ message }}
+            </div>
+          </div>
+        {% endfor %}
       </div>
-      <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-        <p class="text-sm text-gray-700">
-          Showing <span class="font-medium">{{ page_obj.start_index }}</span>
-          to <span class="font-medium">{{ page_obj.end_index }}</span>
-          of <span class="font-medium">{{ paginator.count }}</span> alerts
-        </p>
-        <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-          {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}{% if include_tests %}&include_tests=1{% endif %}"
-               class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-              <span class="sr-only">Previous</span>
-              <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd"
-                      d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0
-                         11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75
-                         0 011.06.02z"
-                      clip-rule="evenodd"/>
-            </a>
-          {% else %}
-            <span class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-300 ring-1 ring-inset ring-gray-300">
-              <span class="sr-only">Previous</span>
-              <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd"
-                      d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0
-                         11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75
-                         0 011.06.02z"
-                      clip-rule="evenodd"/>
-            </span>
-          {% endif %}
-          {% for i in paginator.page_range %}
-            {% if page_obj.number == i %}
-              <span class="relative z-10 inline-flex items-center bg-blue-600 px-4 py-2 text-sm font-semibold text-white">
-                {{ i }}
-              </span>
-            {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
-              <a href="?page={{ i }}{% if include_tests %}&include_tests=1{% endif %}"
-                 class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-                {{ i }}
+    {% endif %}
+
+    <!-- Enhanced Filters Section -->
+    <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 mb-8">
+      <h3 class="text-lg font-semibold text-[#2C6E6B] mb-4 flex items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+        </svg>
+        Filter Alerts
+      </h3>
+      
+      <form method="get" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          <!-- Include Tests Toggle -->
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-[#2C6E6B]">Alert Types</label>
+            <label class="inline-flex items-center p-3 bg-white rounded-lg border-2 border-[#CBD4C2] hover:border-[#2C6E6B] transition-colors cursor-pointer">
+              <input type="checkbox" name="include_tests" value="1" 
+                     class="form-checkbox text-[#2C6E6B] rounded focus:ring-[#2C6E6B]"
+                     {% if include_tests %}checked{% endif %} onchange="this.form.submit()">
+              <span class="ml-2 text-sm text-[#3C4251]">Include Test Uploads</span>
+            </label>
+          </div>
+
+          <!-- Date Filter -->
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-[#2C6E6B]">Date</label>
+            <input type="date" name="date" value="{{ date_selected }}" 
+                   class="w-full p-3 rounded-lg border-2 border-[#CBD4C2] focus:border-[#2C6E6B] focus:ring focus:ring-[#2C6E6B] focus:ring-opacity-50"
+                   onchange="this.form.submit()">
+          </div>
+
+          <!-- Hour Filter -->
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-[#2C6E6B]">Hour</label>
+            <input type="time" name="hour" value="{{ hour_selected }}" 
+                   class="w-full p-3 rounded-lg border-2 border-[#CBD4C2] focus:border-[#2C6E6B] focus:ring focus:ring-[#2C6E6B] focus:ring-opacity-50"
+                   onchange="this.form.submit()">
+          </div>
+
+          <!-- Status Filter -->
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-[#2C6E6B]">Status</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="inline-flex items-center p-2 bg-white rounded-lg border-2 border-[#CBD4C2] hover:border-[#2C6E6B] transition-colors cursor-pointer">
+                <input type="checkbox" name="status" value="new" 
+                       class="form-checkbox text-[#E07A5F] rounded focus:ring-[#E07A5F]"
+                       {% if 'new' in status_selected %}checked{% endif %} onchange="this.form.submit()">
+                <span class="ml-1 text-xs text-[#3C4251]">New</span>
+              </label>
+              <label class="inline-flex items-center p-2 bg-white rounded-lg border-2 border-[#CBD4C2] hover:border-[#2C6E6B] transition-colors cursor-pointer">
+                <input type="checkbox" name="status" value="acknowledged" 
+                       class="form-checkbox text-[#2C6E6B] rounded focus:ring-[#2C6E6B]"
+                       {% if 'acknowledged' in status_selected %}checked{% endif %} onchange="this.form.submit()">
+                <span class="ml-1 text-xs text-[#3C4251]">Ack'd</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-3 pt-4 border-t border-[#CBD4C2]">
+          <button type="submit" class="px-6 py-2 bg-[#2C6E6B] hover:bg-[#1f4f4c] text-white font-medium rounded-lg transition-colors">
+            Apply Filters
+          </button>
+          <a href="{% url 'detection:alerts' %}" class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg transition-colors">
+            Clear All
+          </a>
+        </div>
+      </form>
+    </div>
+
+    <!-- Alerts Table -->
+    {% if alerts %}
+      <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full">
+            <thead class="bg-[#2C6E6B]">
+              <tr>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">
+                  Timestamp
+                </th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">
+                  Source
+                </th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">
+                  Preview
+                </th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">
+                  Confidence
+                </th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">
+                  Status
+                </th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">
+                  Action
+                </th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">
+                  Acknowledged By
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[#CBD4C2]">
+              {% for alert in alerts %}
+                <tr class="{% if alert.acknowledged %}bg-gray-50 opacity-75{% else %}bg-white hover:bg-[#F4EDE8]{% endif %} transition-colors">
+                  
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex flex-col">
+                      <span class="text-sm font-medium text-[#2C6E6B]">{{ alert.timestamp|date:"M d, Y" }}</span>
+                      <span class="text-xs text-[#3C4251]">{{ alert.timestamp|date:"H:i:s" }}</span>
+                    </div>
+                  </td>
+                  
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    {% if alert.detected_by == 'live_camera' %}
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                        </svg>
+                        Live Camera
+                      </span>
+                    {% elif alert.detected_by == 'test_upload' %}
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                        </svg>
+                        Test Upload
+                      </span>
+                    {% else %}
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        {{ alert.detected_by|default:"Unknown" }}
+                      </span>
+                    {% endif %}
+                  </td>
+
+                  <td class="px-6 py-4">
+                    {% if alert.image_snapshot %}
+                      <div class="w-16 h-16 rounded-lg overflow-hidden shadow-md border-2 border-[#CBD4C2] cursor-pointer" 
+                           onclick="openImageModal('{{ alert.image_snapshot.url }}', '{{ alert.timestamp|date:"M d, Y H:i" }}')">
+                        {% if alert.detected_by == 'live_camera' %}
+                          <img src="{{ alert.image_snapshot.url }}" alt="Fall snapshot" class="w-full h-full object-cover hover:scale-110 transition-transform">
+                        {% else %}
+                          <img src="{{ alert.image_snapshot.url }}" alt="Test upload" class="w-full h-full object-cover hover:scale-110 transition-transform">
+                        {% endif %}
+                      </div>
+                    {% else %}
+                      <div class="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    {% endif %}
+                  </td>
+
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    {% if alert.yolo_confidence is not None %}
+                      <div class="flex items-center">
+                        <div class="flex-1 bg-gray-200 rounded-full h-2 mr-3">
+                          <div class="bg-gradient-to-r from-[#E07A5F] to-[#2C6E6B] h-2 rounded-full" 
+                               style="width: {{ alert.yolo_confidence|floatformat:0 }}%"></div>
+                        </div>
+                        <span class="text-sm font-medium text-[#2C6E6B]">{{ alert.yolo_confidence|floatformat:1 }}%</span>
+                      </div>
+                    {% else %}
+                      <span class="text-sm text-gray-400">N/A</span>
+                    {% endif %}
+                  </td>
+
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    {% if alert.acknowledged %}
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                        Acknowledged
+                      </span>
+                    {% else %}
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 animate-pulse">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5v3a.75.75 0 001.5 0v-3A.75.75 0 009 9z" clip-rule="evenodd" />
+                        </svg>
+                        New Alert
+                      </span>
+                    {% endif %}
+                  </td>
+
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    {% if not alert.acknowledged %}
+                      <form method="post" action="{% url 'detection:acknowledge_alert' alert.id %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" 
+                                class="inline-flex items-center px-4 py-2 bg-[#2C6E6B] hover:bg-[#1f4f4c] text-white text-sm font-medium rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#2C6E6B] focus:ring-opacity-50">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                          </svg>
+                          Acknowledge
+                        </button>
+                      </form>
+                    {% else %}
+                      <span class="text-sm text-gray-400">—</span>
+                    {% endif %}
+                  </td>
+
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    {% if alert.acknowledged %}
+                      <div class="flex flex-col">
+                        <span class="text-sm font-medium text-[#2C6E6B]">{{ alert.acknowledged_by.get_full_name|default:alert.acknowledged_by.username }}</span>
+                        <span class="text-xs text-[#3C4251]">{{ alert.acknowledged_at|date:"M d, H:i" }}</span>
+                      </div>
+                    {% else %}
+                      <span class="text-sm text-gray-400">—</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      {% if is_paginated %}
+        <div class="flex items-center justify-between bg-[#FAF9F6] px-6 py-4 rounded-xl shadow-xl border-2 border-[#CBD4C2] mt-6">
+          <div class="flex flex-1 justify-between sm:hidden">
+            {% if page_obj.has_previous %}
+              <a href="?page={{ page_obj.previous_page_number }}{% if include_tests %}&include_tests=1{% endif %}"
+                 class="relative inline-flex items-center px-4 py-2 border border-[#CBD4C2] text-sm font-medium rounded-md text-[#2C6E6B] bg-white hover:bg-[#F4EDE8]">
+                Previous
               </a>
             {% endif %}
-          {% endfor %}
-          {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}{% if include_tests %}&include_tests=1{% endif %}"
-               class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-              <span class="sr-only">Next</span>
-              <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd"
-                      d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0
-                         111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75
-                         0 01-1.06-.02z"
-                      clip-rule="evenodd"/>
-            </a>
-          {% else %}
-            <span class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-300 ring-1 ring-inset ring-gray-300">
-              <span class="sr-only">Next</span>
-              <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd"
-                      d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0
-                         111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75
-                         0 01-1.06-.02z"
-                      clip-rule="evenodd"/>
-            </span>
-          {% endif %}
-        </nav>
+            {% if page_obj.has_next %}
+              <a href="?page={{ page_obj.next_page_number }}{% if include_tests %}&include_tests=1{% endif %}"
+                 class="ml-3 relative inline-flex items-center px-4 py-2 border border-[#CBD4C2] text-sm font-medium rounded-md text-[#2C6E6B] bg-white hover:bg-[#F4EDE8]">
+                Next
+              </a>
+            {% endif %}
+          </div>
+          <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+            <p class="text-sm text-[#3C4251]">
+              Showing <span class="font-medium">{{ page_obj.start_index }}</span> to 
+              <span class="font-medium">{{ page_obj.end_index }}</span> of 
+              <span class="font-medium">{{ paginator.count }}</span> alerts
+            </p>
+            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+              {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if include_tests %}&include_tests=1{% endif %}"
+                   class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-[#CBD4C2] bg-white text-sm font-medium text-[#2C6E6B] hover:bg-[#F4EDE8]">
+                  <span class="sr-only">Previous</span>
+                  <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clip-rule="evenodd"/>
+                  </svg>
+                </a>
+              {% endif %}
+              
+              {% for i in paginator.page_range %}
+                {% if page_obj.number == i %}
+                  <span class="relative z-10 inline-flex items-center px-4 py-2 border border-[#2C6E6B] bg-[#2C6E6B] text-sm font-medium text-white">
+                    {{ i }}
+                  </span>
+                {% elif i > page_obj.number|add:'-3' and i < page_obj.number|add:'3' %}
+                  <a href="?page={{ i }}{% if include_tests %}&include_tests=1{% endif %}"
+                     class="relative inline-flex items-center px-4 py-2 border border-[#CBD4C2] bg-white text-sm font-medium text-[#2C6E6B] hover:bg-[#F4EDE8]">
+                    {{ i }}
+                  </a>
+                {% endif %}
+              {% endfor %}
+              
+              {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if include_tests %}&include_tests=1{% endif %}"
+                   class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-[#CBD4C2] bg-white text-sm font-medium text-[#2C6E6B] hover:bg-[#F4EDE8]">
+                  <span class="sr-only">Next</span>
+                  <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clip-rule="evenodd"/>
+                  </svg>
+                </a>
+              {% endif %}
+            </nav>
+          </div>
+        </div>
+      {% endif %}
+
+    {% else %}
+      <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-12 text-center">
+        <div class="mx-auto w-24 h-24 bg-[#E07A5F] bg-opacity-10 rounded-full flex items-center justify-center mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-[#E07A5F]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold text-[#2C6E6B] mb-2">No alerts found</h3>
+        <p class="text-[#3C4251] mb-6">There are currently no fall alerts matching your criteria.</p>
+        <a href="{% url 'detection:test_detection' %}" class="inline-flex items-center px-6 py-3 bg-[#E07A5F] hover:bg-[#c56a52] text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"/>
+          </svg>
+          Test Detection System
+        </a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+  <div class="relative max-w-4xl max-h-screen p-4">
+    <button onclick="closeImageModal()" class="absolute top-4 right-4 text-white hover:text-gray-300 z-10">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+    <div class="bg-white rounded-lg overflow-hidden">
+      <div class="p-4 bg-[#2C6E6B] text-white">
+        <h3 id="modalTitle" class="text-lg font-semibold">Fall Detection Image</h3>
+      </div>
+      <div class="p-4">
+        <img id="modalImage" src="" alt="Fall detection" class="max-w-full max-h-96 mx-auto">
       </div>
     </div>
-  {% endif %}
-{% else %}
-  <div class="bg-white shadow-md rounded-lg p-6 text-center">
-    <h3 class="text-lg font-medium text-gray-900 mb-1">No alerts found</h3>
-    <p class="text-gray-500 mb-4">There are currently no fall alerts in the system.</p>
-    <a href="{% url 'detection:test_detection' %}" class="btn-primary inline-flex items-center">
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd"
-              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-              clip-rule="evenodd"/>
-      </svg>
-      Test Detection
-    </a>
   </div>
-{% endif %}
+</div>
 
-<!-- Tablesort for clickable sorting -->
-<script src="https://cdn.jsdelivr.net/npm/tablesort@5.2.1/dist/tablesort.min.js"></script>
 <script>
-  // initialize Tablesort on our table
-  const table = document.getElementById('alerts-table');
-  new Tablesort(table);
+function openImageModal(imageUrl, timestamp) {
+  document.getElementById('modalImage').src = imageUrl;
+  document.getElementById('modalTitle').textContent = 'Fall Detection - ' + timestamp;
+  document.getElementById('imageModal').classList.remove('hidden');
+}
 
-  // Add sorting on arrow click
-  document.querySelectorAll('.sortable .arrow-up').forEach((arrow, idx) => {
-    arrow.addEventListener('click', () => Tablesort.sortTable(table, idx, true));
-  });
-  document.querySelectorAll('.sortable .arrow-down').forEach((arrow, idx) => {
-    arrow.addEventListener('click', () => Tablesort.sortTable(table, idx, false));
-  });
+function closeImageModal() {
+  document.getElementById('imageModal').classList.add('hidden');
+}
 
-  // Helper: get unique values for a column
-  function getUniqueColumnValues(colIdx) {
-    const values = new Set();
-    table.querySelectorAll('tbody tr').forEach(tr => {
-      const cell = tr.children[colIdx];
-      if (cell) values.add(cell.textContent.trim());
-    });
-    return Array.from(values).sort();
+// Close modal when clicking outside
+document.getElementById('imageModal').addEventListener('click', function(e) {
+  if (e.target === this) {
+    closeImageModal();
   }
+});
 
-  // Populate dropdowns with unique values
-  document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
-    const col = +dropdown.dataset.col;
-    const values = getUniqueColumnValues(col);
-    values.forEach(val => {
-      if (val && !dropdown.querySelector(`option[value="${val}"]`)) {
-        const opt = document.createElement('option');
-        opt.value = val;
-        opt.textContent = val;
-        dropdown.appendChild(opt);
-      }
-    });
-  });
-
-  // Multi-column filtering
-  function filterTable() {
-    const filters = Array.from(document.querySelectorAll('.filter-dropdown')).map(sel => sel.value);
-    table.querySelectorAll('tbody tr').forEach(tr => {
-      let show = true;
-      filters.forEach((val, idx) => {
-        if (val && tr.children[idx].textContent.trim() !== val) show = false;
-      });
-      tr.style.display = show ? '' : 'none';
-    });
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeImageModal();
   }
-  document.querySelectorAll('.filter-dropdown').forEach(sel => {
-    sel.addEventListener('change', filterTable);
-  });
-
-  // Tablesort custom sortTable for arrow click
-  Tablesort.sortTable = function(table, colIdx, asc) {
-    const th = table.querySelectorAll('th.sortable')[colIdx];
-    if (th) {
-      th.click();
-      if ((asc && th.classList.contains('desc')) || (!asc && th.classList.contains('asc'))) {
-        th.click();
-      }
-    }
-  };
+});
 </script>
+
 {% endblock %}

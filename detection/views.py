@@ -20,6 +20,7 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.cache import cache
+from django.db.models import Count, Avg, Q
 
 from .models import FallAlert
 from .forms import TestDetectionForm
@@ -28,6 +29,116 @@ from .services import VideoClipService
 
 # Instanciation globale du service pour éviter de recharger le modèle à chaque requête
 fall_service = FallDetectionService(conf_threshold=0.50)
+
+class DashboardView(LoginRequiredMixin, TemplateView):
+    template_name = "detection/dashboard.html"
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get current time references
+        now = timezone.now()
+        today = now.date()
+        yesterday = today - timedelta(days=1)
+        week_ago = today - timedelta(days=7)
+        
+        # Basic stats
+        total_alerts = FallAlert.objects.count()
+        today_alerts = FallAlert.objects.filter(timestamp__date=today).count()
+        yesterday_alerts = FallAlert.objects.filter(timestamp__date=yesterday).count()
+        pending_alerts = FallAlert.objects.filter(acknowledged=False).count()
+        
+        # Response rate calculation
+        total_real_alerts = FallAlert.objects.exclude(detected_by="test_upload").count()
+        acknowledged_alerts = FallAlert.objects.exclude(detected_by="test_upload").filter(acknowledged=True).count()
+        response_rate = (acknowledged_alerts / total_real_alerts * 100) if total_real_alerts > 0 else 0
+        
+        # Weekly activity (last 7 days)
+        weekly_activity = []
+        max_daily_count = 0
+        for i in range(7):
+            date = today - timedelta(days=i)
+            count = FallAlert.objects.filter(timestamp__date=date).count()
+            max_daily_count = max(max_daily_count, count)
+            weekly_activity.append({
+                'day': date.strftime('%a %m/%d'),
+                'count': count,
+                'date': date
+            })
+        weekly_activity.reverse()  # Show oldest to newest
+        
+        for stat in weekly_activity:
+            stat['width'] = (stat['count'] / max_daily_count * 100) if max_daily_count > 0 else 0
+        # Detection sources
+        detection_sources = (
+            FallAlert.objects
+            .values('detected_by')
+            .annotate(count=Count('id'))
+            .order_by('-count')
+        )
+        
+        # Add percentages
+        for source in detection_sources:
+            source['percentage'] = (source['count'] / total_alerts * 100) if total_alerts > 0 else 0
+        
+        # Recent alerts (last 10)
+        recent_alerts = FallAlert.objects.select_related('acknowledged_by').order_by('-timestamp')[:10]
+        
+        # Additional stats
+        avg_daily_alerts = FallAlert.objects.filter(
+            timestamp__gte=week_ago
+        ).count() / 7.0 if total_alerts > 0 else 0
+        
+        # Find peak hour - SQLite compatible version
+        peak_hour = None
+        if total_alerts > 0:
+            # Get all alerts and group by hour in Python (SQLite compatible)
+            alerts_with_hours = FallAlert.objects.all().values_list('timestamp', flat=True)
+            hour_counts = {}
+            for timestamp in alerts_with_hours:
+                hour = timestamp.hour
+                hour_counts[hour] = hour_counts.get(hour, 0) + 1
+            
+            if hour_counts:
+                peak_hour_num = max(hour_counts, key=hour_counts.get)
+                peak_hour = f"{peak_hour_num:02d}:00"
+        
+        # Average response time (for acknowledged alerts)
+        acknowledged_with_times = FallAlert.objects.filter(
+            acknowledged=True,
+            acknowledged_at__isnull=False
+        )
+        
+        avg_response_time = None
+        if acknowledged_with_times.exists():
+            total_response_time = sum([
+                (alert.acknowledged_at - alert.timestamp).total_seconds()
+                for alert in acknowledged_with_times
+            ])
+            avg_response_seconds = total_response_time / acknowledged_with_times.count()
+            avg_response_time = f"{int(avg_response_seconds // 60)}m {int(avg_response_seconds % 60)}s"
+        
+        # Get last alert time
+        last_alert = FallAlert.objects.order_by('-timestamp').first()
+        last_alert_time = last_alert.timestamp if last_alert else None
+        
+        context['stats'] = {
+            'total_alerts': total_alerts,
+            'today_alerts': today_alerts,
+            'today_vs_yesterday': today_alerts - yesterday_alerts,
+            'pending_alerts': pending_alerts,
+            'response_rate': response_rate,
+            'weekly_activity': weekly_activity,
+            'max_daily_alerts': max_daily_count,
+            'detection_sources': detection_sources,
+            'recent_alerts': recent_alerts,
+            'avg_daily_alerts': avg_daily_alerts,
+            'peak_hour': peak_hour,
+            'avg_response_time': avg_response_time,
+            'last_alert_time': last_alert_time,
+        }
+        
+        return context
 
 class AlertListView(LoginRequiredMixin, ListView):
     model = FallAlert
@@ -202,7 +313,7 @@ class TestDetectionView(LoginRequiredMixin, FormView):
 class CreateAlertView(LoginRequiredMixin, View):
     """
     Crée ou met à jour un FallAlert live_camera,
-    throttle : pas plus d’une nouvelle alerte toutes les THRESHOLD secondes.
+    throttle : pas plus d'une nouvelle alerte toutes les THRESHOLD secondes.
     Gère yolo_confidence, yolo_class, description, snapshot_b64, et clip vidéo.
     """
     THRESHOLD = timedelta(seconds=30)
@@ -298,9 +409,9 @@ class CreateAlertView(LoginRequiredMixin, View):
 class RunYoloView(View):
     """
     Reçoit en POST une image Base64 (sans préfixe), lève un bool fall=True/False
-    et throttle la création d’alertes live_camera.
+    et throttle la création d'alertes live_camera.
     """
-    THRESHOLD_SECS = 30         # ne pas recréer plus souvent qu’une fois tous les 30s
+    THRESHOLD_SECS = 30         # ne pas recréer plus souvent qu'une fois tous les 30s
     CACHE_KEY      = "last_live_alert_ts"
 
     def post(self, request, *args, **kwargs):
