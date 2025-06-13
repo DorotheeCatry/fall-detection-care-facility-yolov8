@@ -28,7 +28,7 @@ from .services import FallDetectionService
 from .services import VideoClipService
 
 # Instanciation globale du service pour éviter de recharger le modèle à chaque requête
-fall_service = FallDetectionService(conf_threshold=0.50)
+fall_service = FallDetectionService(conf_threshold=0.70)
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "detection/dashboard.html"
