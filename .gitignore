@@ -200,3 +200,6 @@ theme/
 backend/settings.py
 poetry.lock
 pyproject.toml
+
+snapshots/
+

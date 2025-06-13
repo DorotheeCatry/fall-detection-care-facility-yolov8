@@ -1,6 +1,7 @@
 # detection/views.py
 
 import os
+import time
 import cv2
 import numpy as np
 from django.shortcuts import get_object_or_404, redirect
@@ -11,7 +12,7 @@ from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse, HttpResponseBadRequest
 import base64
-
+from django.conf import settings
 from .models import FallAlert
 from .forms import TestDetectionForm
 from .services import FallDetectionService, VideoClipService
@@ -157,7 +158,7 @@ class CreateAlertView(LoginRequiredMixin, View):
         yolo_cls       = payload.get("yolo_class")
         metadata_json  = payload.get("metadata")
         snapshot_b64   = payload.get("snapshot_b64")
-        create_clip    = payload.get("make_clip")
+        create_clip    = True#payload.get("make_clip")
 
         # 3. Créer un objet sans le sauvegarder immédiatement
         new_alert = FallAlert(
@@ -232,4 +233,17 @@ class RunYoloView(View):
         except Exception as e:
             return JsonResponse({"error": f"YOLO inference error: {str(e)}"}, status=500)
 
-        return JsonResponse({"fall": fall_detected, "confidence": confidence}, status=200)
+        if fall_detected:
+            # 1. Créer une alerte (sans vidéo)
+            alert = FallAlert.objects.create(
+                yolo_confidence=confidence,
+                description="Chute détectée via YOLO"
+            )
+
+            # 2. Sauvegarder la frame actuelle en snapshot dans l'alerte
+            alert.save_snapshot_from_frame(img)
+            alert.save()  # Important pour enregistrer l'image dans la base
+            
+            return JsonResponse({"fall": fall_detected, "confidence": confidence}, status=200)
+        else:
+            return JsonResponse({"fall": False}, status=200)
