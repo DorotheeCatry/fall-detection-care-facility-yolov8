@@ -246,6 +246,7 @@
             <p>• All alerts created here will be marked as "test_upload" or "live_camera"</p>
             <p>• Test alerts can be acknowledged without affecting real statistics</p>
             <p>• Camera detection runs every 2 seconds to prevent spam alerts</p>
+            <p>• <strong>NEW:</strong> Live detection now shows fall states: 🟡 Surveillance → 🟠 Alerte → 🔴 Urgent</p>
           </div>
         </div>
       </div>
@@ -255,7 +256,7 @@
 
 <!-- JavaScript for Enhanced Functionality -->
 <script type="module">
-  console.log("🔴 Enhanced test_detection.js started");
+  console.log("🔴 Enhanced test_detection.js started with fall state tracking");
 
   // Import Mediapipe Tasks-Vision
   import {
@@ -284,15 +285,34 @@
 
   const YOLO_INTERVAL = 2000;
   let lastYoloTime = 0;
+  let currentFallState = null;
+  let currentTimeOnGround = 0;
 
   // Update status indicators
-  function updateStatus(message, isActive = false, isDetecting = false) {
+  function updateStatus(message, isActive = false, fallState = null, timeOnGround = 0) {
     detectionStatus.textContent = message;
     
-    if (isDetecting) {
-      statusIndicator.className = "w-3 h-3 rounded-full bg-red-500 mr-3 animate-pulse";
-      statusDiv.style.display = "block";
-      statusDiv.textContent = "Fall Detected!";
+    if (fallState) {
+      currentFallState = fallState;
+      currentTimeOnGround = timeOnGround;
+      
+      // Update status based on fall state
+      if (fallState === 'urgent') {
+        statusIndicator.className = "w-3 h-3 rounded-full bg-red-500 mr-3 animate-pulse";
+        statusDiv.style.display = "block";
+        statusDiv.textContent = `🔴 URGENT (${Math.round(timeOnGround)}s)`;
+        statusDiv.className = "absolute top-4 right-4 px-4 py-2 bg-red-600 text-white rounded-full font-medium shadow-lg animate-pulse";
+      } else if (fallState === 'alert') {
+        statusIndicator.className = "w-3 h-3 rounded-full bg-orange-500 mr-3 animate-pulse";
+        statusDiv.style.display = "block";
+        statusDiv.textContent = `🟠 ALERTE (${Math.round(timeOnGround)}s)`;
+        statusDiv.className = "absolute top-4 right-4 px-4 py-2 bg-orange-500 text-white rounded-full font-medium shadow-lg animate-pulse";
+      } else if (fallState === 'monitoring') {
+        statusIndicator.className = "w-3 h-3 rounded-full bg-yellow-500 mr-3 animate-pulse";
+        statusDiv.style.display = "block";
+        statusDiv.textContent = `🟡 SURVEILLANCE (${Math.round(timeOnGround)}s)`;
+        statusDiv.className = "absolute top-4 right-4 px-4 py-2 bg-yellow-500 text-white rounded-full font-medium shadow-lg animate-pulse";
+      }
     } else if (isActive) {
       statusIndicator.className = "w-3 h-3 rounded-full bg-green-500 mr-3";
       statusDiv.style.display = "none";
@@ -450,32 +470,29 @@
       const data = await response.json();
       
       if (data && data.fall) {
-        updateStatus(`Fall detected! Confidence: ${(data.confidence * 100).toFixed(1)}%`, true, true);
+        const fallState = data.fall_state || 'monitoring';
+        const timeOnGround = data.time_on_ground || 0;
         
-        // Create alert
-        fetch("{% url 'detection:create_alert' %}", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
-          },
-          body: JSON.stringify({
-            type: "live_camera",
-            description: "Fall detected via YOLOv8",
-            yolo_confidence: data.confidence,
-            yolo_class: "Fall-Detected",
-            snapshot_b64: dataUrl
-          })
-        }).then(r => {
-          if (r.ok) {
-            setTimeout(() => {
-              if (isCameraActive) {
-                updateStatus("Camera active - Monitoring for falls", true);
-              }
-            }, 3000);
-          }
-        });
+        updateStatus(
+          `Fall detected! State: ${fallState} (${Math.round(timeOnGround)}s)`, 
+          true, 
+          fallState, 
+          timeOnGround
+        );
+        
+        // Auto-clear status after some time for non-urgent cases
+        if (fallState !== 'urgent') {
+          setTimeout(() => {
+            if (isCameraActive && currentFallState !== 'urgent') {
+              updateStatus("Camera active - Monitoring for falls", true);
+            }
+          }, 5000);
+        }
+      } else {
+        // No fall detected - clear any previous fall state
+        if (isCameraActive) {
+          updateStatus("Camera active - Monitoring for falls", true);
+        }
       }
     } catch (error) {
       console.error("❌ YOLO processing error:", error);

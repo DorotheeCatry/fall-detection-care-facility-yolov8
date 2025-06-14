@@ -9,6 +9,30 @@ from typing import Dict, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
 
+# Description et niveau de besoin d'intervention pour chaque état
+STATE_DESCRIPTION_MAP = {
+    "monitoring": {
+        "description": "Personne normale, surveillance",
+        "needs_help": False,
+        "level": "🟡 Surveillance"
+    },
+    "alert": {
+        "description": "Personne au sol depuis un moment",
+        "needs_help": "Potentiellement",
+        "level": "🟠 Alerte"
+    },
+    "urgent": {
+        "description": "Personne immobile au sol longtemps",
+        "needs_help": True,
+        "level": "🔴 Alerte urgente"
+    },
+    "recovered": {
+        "description": "Personne s'est relevée seule",
+        "needs_help": False,
+        "level": "🟢 Récupéré"
+    },
+}
+
 class FallState(Enum):
     """États possibles d'une personne détectée au sol."""
     MONITORING = "monitoring"      # 0-10s : surveillance
@@ -118,6 +142,45 @@ class FallTracker:
         state.current_state = urgency
         
         return urgency, state.time_on_ground()
+    
+    def get_state_info(self, state_str: str) -> dict:
+        """
+        Retourne la description et le niveau d'intervention d'un état donné.
+        """
+        return STATE_DESCRIPTION_MAP.get(state_str, {
+            "description": "État inconnu",
+            "needs_help": "Inconnu",
+            "level": "❓ Inconnu"
+        })
+    
+    def get_state_label(self, person_id: str) -> str:
+        """
+        Retourne un label lisible pour affichage à l'écran.
+        """
+        state_obj = self.person_states.get(person_id)
+        if state_obj:
+            state_str = state_obj.current_state.value  # "monitoring", "alert", etc.
+            info = self.get_state_info(state_str)
+            level = info.get("level", "")
+            time_elapsed = int(state_obj.time_on_ground())
+            return f"{level} ({time_elapsed}s)"
+        return "❓ Inconnu"
+    
+    def get_state_color(self, person_id: str) -> Tuple[int, int, int]:
+        """
+        Retourne la couleur BGR pour l'affichage OpenCV selon l'état.
+        """
+        state_obj = self.person_states.get(person_id)
+        if not state_obj:
+            return (128, 128, 128)  # Gris pour inconnu
+        
+        color_map = {
+            FallState.MONITORING: (0, 255, 255),    # Jaune (BGR)
+            FallState.ALERT: (0, 165, 255),         # Orange (BGR)
+            FallState.URGENT: (0, 0, 255),          # Rouge (BGR)
+            FallState.RECOVERED: (0, 255, 0),       # Vert (BGR)
+        }
+        return color_map.get(state_obj.current_state, (128, 128, 128))
     
     def cleanup_old_tracks(self):
         """Supprime les suivis trop anciens."""
