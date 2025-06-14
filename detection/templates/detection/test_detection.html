@@ -287,6 +287,7 @@
   let lastYoloTime = 0;
   let currentFallState = null;
   let currentTimeOnGround = 0;
+  let lastDetectionResults = null; // Store last YOLO results for drawing
 
   // Update status indicators
   function updateStatus(message, isActive = false, fallState = null, timeOnGround = 0) {
@@ -400,6 +401,7 @@
       noCameraMessage.style.display = "flex";
       isCameraActive = false;
       isProcessing = false;
+      lastDetectionResults = null;
       updateStatus("Camera stopped");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
@@ -412,8 +414,11 @@
 
     while (videoElement.srcObject && isCameraActive) {
       try {
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
         // Pose detection
-        if (poseLandmarker) {
+        if (poseLandmarker && showPose) {
           const result = await poseLandmarker.detectForVideo(
             videoElement,
             performance.now()
@@ -421,11 +426,13 @@
 
           if (result.landmarks && result.landmarks.length > 0) {
             const singleLandmarks = result.landmarks[0];
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (showPose) {
-              drawLandmarks(singleLandmarks);
-            }
+            drawLandmarks(singleLandmarks);
           }
+        }
+
+        // Draw YOLO detection results if available
+        if (lastDetectionResults) {
+          drawYoloResults(lastDetectionResults);
         }
 
         // YOLO detection (every YOLO_INTERVAL ms)
@@ -443,6 +450,65 @@
     }
 
     isProcessing = false;
+  }
+
+  // Draw YOLO detection results
+  function drawYoloResults(results) {
+    if (!results || !results.fall) return;
+
+    const fallState = results.fall_state || 'monitoring';
+    const timeOnGround = results.time_on_ground || 0;
+    
+    // Get color based on fall state
+    let color, bgColor;
+    switch (fallState) {
+      case 'urgent':
+        color = '#DC2626'; // red-600
+        bgColor = 'rgba(220, 38, 38, 0.1)';
+        break;
+      case 'alert':
+        color = '#EA580C'; // orange-600
+        bgColor = 'rgba(234, 88, 12, 0.1)';
+        break;
+      case 'monitoring':
+        color = '#CA8A04'; // yellow-600
+        bgColor = 'rgba(202, 138, 4, 0.1)';
+        break;
+      default:
+        color = '#6B7280'; // gray-500
+        bgColor = 'rgba(107, 114, 128, 0.1)';
+    }
+
+    // Draw a mock bounding box (since we don't have exact coordinates from the API)
+    // In a real implementation, you'd get the actual bbox coordinates
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const boxWidth = 200;
+    const boxHeight = 300;
+    const x1 = centerX - boxWidth / 2;
+    const y1 = centerY - boxHeight / 2;
+    const x2 = centerX + boxWidth / 2;
+    const y2 = centerY + boxHeight / 2;
+
+    // Draw bounding box
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x1, y1, boxWidth, boxHeight);
+
+    // Draw background for text
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(x1, y1 - 40, boxWidth, 40);
+
+    // Draw text
+    ctx.fillStyle = color;
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'center';
+    
+    const stateText = fallState.toUpperCase();
+    const timeText = `(${Math.round(timeOnGround)}s)`;
+    
+    ctx.fillText(`${stateText} ${timeText}`, centerX, y1 - 20);
+    ctx.fillText(`Conf: ${(results.confidence * 100).toFixed(1)}%`, centerX, y1 - 5);
   }
 
   // Send frame to YOLO
@@ -473,6 +539,9 @@
         const fallState = data.fall_state || 'monitoring';
         const timeOnGround = data.time_on_ground || 0;
         
+        // Store results for drawing
+        lastDetectionResults = data;
+        
         updateStatus(
           `Fall detected! State: ${fallState} (${Math.round(timeOnGround)}s)`, 
           true, 
@@ -490,6 +559,7 @@
         }
       } else {
         // No fall detected - clear any previous fall state
+        lastDetectionResults = null;
         if (isCameraActive) {
           updateStatus("Camera active - Monitoring for falls", true);
         }
