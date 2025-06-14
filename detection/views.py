@@ -550,6 +550,7 @@ class RunYoloView(View):
             # Initialize tracking variables
             fall_state_value = "monitoring"
             time_on_ground = 0
+            bbox_data = None
             
             # Extract bounding box for tracking (if tracking is enabled)
             if TRACKING_ENABLED:
@@ -558,6 +559,14 @@ class RunYoloView(View):
                     for box in r.boxes:
                         if r.names[int(box.cls)] == "Fall-Detected":
                             bbox = tuple(map(int, box.xyxy[0].tolist()))
+                            bbox_data = {
+                                "x1": bbox[0],
+                                "y1": bbox[1], 
+                                "x2": bbox[2],
+                                "y2": bbox[3],
+                                "width": bbox[2] - bbox[0],
+                                "height": bbox[3] - bbox[1]
+                            }
                             break
                     if bbox:
                         break
@@ -615,5 +624,6 @@ class RunYoloView(View):
         if TRACKING_ENABLED:
             response_data["fall_state"] = fall_state_value
             response_data["time_on_ground"] = time_on_ground
+            response_data["bbox"] = bbox_data
         
         return JsonResponse(response_data, status=200)

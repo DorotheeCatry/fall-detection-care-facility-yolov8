@@ -452,12 +452,13 @@
     isProcessing = false;
   }
 
-  // Draw YOLO detection results
+  // Draw YOLO detection results with real bounding box
   function drawYoloResults(results) {
-    if (!results || !results.fall) return;
+    if (!results || !results.fall || !results.bbox) return;
 
     const fallState = results.fall_state || 'monitoring';
     const timeOnGround = results.time_on_ground || 0;
+    const bbox = results.bbox;
     
     // Get color based on fall state
     let color, bgColor;
@@ -479,25 +480,24 @@
         bgColor = 'rgba(107, 114, 128, 0.1)';
     }
 
-    // Draw a mock bounding box (since we don't have exact coordinates from the API)
-    // In a real implementation, you'd get the actual bbox coordinates
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const boxWidth = 200;
-    const boxHeight = 300;
-    const x1 = centerX - boxWidth / 2;
-    const y1 = centerY - boxHeight / 2;
-    const x2 = centerX + boxWidth / 2;
-    const y2 = centerY + boxHeight / 2;
+    // Scale bbox coordinates to canvas size
+    const scaleX = canvas.width / hiddenCanvas.width;
+    const scaleY = canvas.height / hiddenCanvas.height;
+    
+    const x1 = bbox.x1 * scaleX;
+    const y1 = bbox.y1 * scaleY;
+    const width = bbox.width * scaleX;
+    const height = bbox.height * scaleY;
 
     // Draw bounding box
     ctx.strokeStyle = color;
     ctx.lineWidth = 3;
-    ctx.strokeRect(x1, y1, boxWidth, boxHeight);
+    ctx.strokeRect(x1, y1, width, height);
 
     // Draw background for text
+    const textHeight = 40;
     ctx.fillStyle = bgColor;
-    ctx.fillRect(x1, y1 - 40, boxWidth, 40);
+    ctx.fillRect(x1, y1 - textHeight, width, textHeight);
 
     // Draw text
     ctx.fillStyle = color;
@@ -506,6 +506,7 @@
     
     const stateText = fallState.toUpperCase();
     const timeText = `(${Math.round(timeOnGround)}s)`;
+    const centerX = x1 + width / 2;
     
     ctx.fillText(`${stateText} ${timeText}`, centerX, y1 - 20);
     ctx.fillText(`Conf: ${(results.confidence * 100).toFixed(1)}%`, centerX, y1 - 5);
