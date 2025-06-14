@@ -36,7 +36,7 @@ STATE_DESCRIPTION_MAP = {
 
 class FallState(Enum):
     """États possibles d'une personne détectée au sol."""
-    MONITORING = "monitoring"      # 0-10s : surveillance
+    MONITORING = "monitoring"     # 0-10s : surveillance
     ALERT = "alert"               # 10-30s : alerte standard  
     URGENT = "urgent"             # >30s : alerte urgente
     RECOVERED = "recovered"       # personne s'est relevée
@@ -117,7 +117,7 @@ class PersonState:
 class FallTracker:
     """Gestionnaire de suivi des chutes avec états temporels."""
     
-    def __init__(self, timeout: float = 120.0):  # Augmenté à 2 minutes
+    def __init__(self, timeout: float = 120.0):  # 2 minutes
         """
         Args:
             timeout: Temps après lequel on considère qu'une personne n'est plus suivie
@@ -186,7 +186,7 @@ class FallTracker:
     def get_persistent_states(self) -> Dict[str, PersonState]:
         """
         Retourne les états persistants même sans détection récente.
-        Utile pour maintenir l'affichage même quand YOLO rate quelques frames.
+        Pour maintenir l'affichage même quand YOLO rate quelques frames.
         """
         current_time = time.time()
         active_states = {}
