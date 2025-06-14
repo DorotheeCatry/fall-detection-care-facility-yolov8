@@ -107,7 +107,7 @@
                 <input type="checkbox" name="status" value="acknowledged"
                       class="form-checkbox text-[#2C6E6B] rounded focus:ring-[#2C6E6B]"
                       {% if 'acknowledged' in status_selected %}checked{% endif %} onchange="this.form.submit()">
-                <span class="ml-1 text-xs text-[#3C4251]">Acknowledged</span>
+                <span class="ml-1 text-xs text-[#3C4251]">Ack</span>
               </label>
             </div>
           </div>
@@ -160,51 +160,51 @@
           <table class="w-full table-fixed">
             <thead class="bg-[#2C6E6B]">
               <tr>
-                <th class="w-32 px-3 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Time</th>
-                <th class="w-24 px-3 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Source</th>
-                <th class="w-20 px-3 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Preview</th>
-                <th class="w-28 px-3 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Confidence</th>
-                <th class="w-32 px-3 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Fall State</th>
-                <th class="w-24 px-3 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Status</th>
-                <th class="w-24 px-3 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Accuracy</th>
-                <th class="w-28 px-3 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Actions</th>
-                <th class="w-32 px-3 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Ack. By</th>
+                <th class="w-28 px-2 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Time</th>
+                <th class="w-20 px-2 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Source</th>
+                <th class="w-16 px-2 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Preview</th>
+                <th class="w-24 px-2 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Confidence</th>
+                <th class="w-28 px-2 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Fall State</th>
+                <th class="w-16 px-2 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Status</th>
+                <th class="w-20 px-2 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Accuracy</th>
+                <th class="w-24 px-2 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Actions</th>
+                <th class="w-24 px-2 py-2 text-left text-xs font-semibold text-[#FAF9F6] uppercase tracking-wider">Ack. By</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-[#CBD4C2]">
               {% for alert in alerts %}
                 <tr class="{% if alert.acknowledged %}bg-gray-50 opacity-75{% else %}bg-white hover:bg-[#F4EDE8]{% endif %} transition-colors">
                   <!-- Timestamp -->
-                  <td class="px-3 py-2 whitespace-nowrap">
+                  <td class="px-2 py-2 whitespace-nowrap">
                     <div class="flex flex-col">
                       <span class="text-xs font-medium text-[#2C6E6B]">{{ alert.timestamp|date:"M d" }}</span>
                       <span class="text-xs text-[#3C4251]">{{ alert.timestamp|date:"H:i" }}</span>
                     </div>
                   </td>
                   <!-- Source -->
-                  <td class="px-3 py-2 whitespace-nowrap">
+                  <td class="px-2 py-2 whitespace-nowrap">
                     {% if alert.detected_by == 'live_camera' %}
-                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <span class="inline-flex items-center px-1 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
                           <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
                         </svg>
                         Live
                       </span>
                     {% elif alert.detected_by == 'test_upload' %}
-                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                      <span class="inline-flex items-center px-1 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
                           <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
                         </svg>
                         Test
                       </span>
                     {% else %}
-                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <span class="inline-flex items-center px-1 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                         {{ alert.detected_by|default:"Unknown" }}
                       </span>
                     {% endif %}
                   </td>
                   <!-- Preview -->
-                  <td class="px-3 py-2">
+                  <td class="px-2 py-2">
                     {% if alert.image_snapshot %}
                       <div class="w-12 h-12 rounded-lg overflow-hidden shadow-md border-2 border-[#CBD4C2] cursor-pointer"
                           onclick="openImageModal('{{ alert.image_snapshot.url }}', '{{ alert.timestamp|date:"M d, Y H:i" }}')">
@@ -219,21 +219,21 @@
                     {% endif %}
                   </td>
                   <!-- Confidence -->
-                  <td class="px-3 py-2 whitespace-nowrap">
+                  <td class="px-2 py-2 whitespace-nowrap">
                     {% if alert.yolo_confidence is not None %}
                       <div class="flex items-center">
                         <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2">
                           <div class="bg-gradient-to-r from-[#E07A5F] to-[#2C6E6B] h-2 rounded-full"
-                              style="width: {{ alert.yolo_confidence|floatformat:0|add:'00' }}%"></div>
+                              style="width: {{ alert.yolo_confidence|floatformat:2|add:'0'|mul:'100' }}%"></div>
                         </div>
-                        <span class="text-xs font-medium text-[#2C6E6B]">{{ alert.yolo_confidence|floatformat:2 }}</span>
+                        <span class="text-xs font-medium text-[#2C6E6B]">{{ alert.yolo_confidence|floatformat:2|mul:'100' }}%</span>
                       </div>
                     {% else %}
                       <span class="text-xs text-gray-400">N/A</span>
                     {% endif %}
                   </td>
                   <!-- Fall State -->
-                  <td class="px-3 py-2 whitespace-nowrap">
+                  <td class="px-2 py-2 whitespace-nowrap">
                     {% if alert.fall_state %}
                       {% if alert.fall_state == 'monitoring' %}
                         <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
@@ -273,16 +273,16 @@
                     {% endif %}
                   </td>
                   <!-- Status -->
-                  <td class="px-3 py-2 whitespace-nowrap">
+                  <td class="px-2 py-2 whitespace-nowrap">
                     {% if alert.acknowledged %}
-                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <span class="inline-flex items-center px-1 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
                           <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                         </svg>
                         Ack
                       </span>
                     {% else %}
-                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 animate-pulse">
+                      <span class="inline-flex items-center px-1 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 animate-pulse">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
                           <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5v3a.75.75 0 001.5 0v-3A.75.75 0 009 9z" clip-rule="evenodd" />
                         </svg>
@@ -291,17 +291,17 @@
                     {% endif %}
                   </td>
                   <!-- Accuracy -->
-                  <td class="px-3 py-2 whitespace-nowrap">
+                  <td class="px-2 py-2 whitespace-nowrap">
                     {% if alert.is_accurate is not None %}
                       {% if alert.is_accurate %}
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span class="inline-flex items-center px-1 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                           </svg>
                           Yes
                         </span>
                       {% else %}
-                        <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        <span class="inline-flex items-center px-1 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                           <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
                           </svg>
@@ -309,7 +309,7 @@
                         </span>
                       {% endif %}
                     {% else %}
-                      <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      <span class="inline-flex items-center px-1 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
                           <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
                         </svg>
@@ -318,21 +318,21 @@
                     {% endif %}
                   </td>
                   <!-- Actions -->
-                  <td class="px-3 py-2 whitespace-nowrap">
+                  <td class="px-2 py-2 whitespace-nowrap">
                     <div class="flex flex-col space-y-1">
                       {% if not alert.acknowledged %}
                         {% if alert.detected_by != 'test_upload' %}
                           <!-- Accuracy buttons for live camera alerts -->
                           <div class="flex space-x-1">
                             <a href="{% url 'detection:acknowledge_alert' alert.id %}?accurate=true"
-                              class="inline-flex items-center px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-1 focus:ring-green-600 focus:ring-opacity-50">
+                              class="inline-flex items-center px-1 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-1 focus:ring-green-600 focus:ring-opacity-50">
                               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                               </svg>
                               Yes
                             </a>
                             <a href="{% url 'detection:acknowledge_alert' alert.id %}?accurate=false"
-                              class="inline-flex items-center px-2 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-1 focus:ring-red-600 focus:ring-opacity-50">
+                              class="inline-flex items-center px-1 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-1 focus:ring-red-600 focus:ring-opacity-50">
                               <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.28 7.22a.75.75 0 00-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 101.06 1.06L10 11.06l1.72 1.72a.75.75 0 101.06-1.06L11.06 10l1.72-1.72a.75.75 0 00-1.06-1.06L10 8.94 8.28 7.22z" clip-rule="evenodd" />
                               </svg>
@@ -342,7 +342,7 @@
                         {% else %}
                           <!-- Simple acknowledge for test uploads -->
                           <a href="{% url 'detection:acknowledge_alert' alert.id %}"
-                            class="inline-flex items-center px-2 py-1 bg-[#2C6E6B] hover:bg-[#1f4f4c] text-white text-xs font-medium rounded transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-1 focus:ring-[#2C6E6B] focus:ring-opacity-50">
+                            class="inline-flex items-center px-1 py-1 bg-[#2C6E6B] hover:bg-[#1f4f4c] text-white text-xs font-medium rounded transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-1 focus:ring-[#2C6E6B] focus:ring-opacity-50">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
                               <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                             </svg>
@@ -355,7 +355,7 @@
                     </div>
                   </td>
                   <!-- Acknowledged By -->
-                  <td class="px-3 py-2 whitespace-nowrap">
+                  <td class="px-2 py-2 whitespace-nowrap">
                     {% if alert.acknowledged %}
                       <div class="flex flex-col">
                         <span class="text-xs font-medium text-[#2C6E6B]">{{ alert.acknowledged_by.get_full_name|default:alert.acknowledged_by.username }}</span>
