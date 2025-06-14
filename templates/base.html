@@ -22,6 +22,47 @@
             --off-white: #FAF9F6;
         }
         
+        /* Typography System */
+        .text-display {
+            @apply text-4xl font-bold leading-tight;
+        }
+        
+        .text-heading-1 {
+            @apply text-3xl font-bold leading-tight;
+        }
+        
+        .text-heading-2 {
+            @apply text-2xl font-semibold leading-snug;
+        }
+        
+        .text-heading-3 {
+            @apply text-xl font-semibold leading-snug;
+        }
+        
+        .text-heading-4 {
+            @apply text-lg font-semibold leading-normal;
+        }
+        
+        .text-body-large {
+            @apply text-lg font-normal leading-relaxed;
+        }
+        
+        .text-body {
+            @apply text-base font-normal leading-normal;
+        }
+        
+        .text-body-small {
+            @apply text-sm font-normal leading-normal;
+        }
+        
+        .text-caption {
+            @apply text-xs font-medium leading-tight;
+        }
+        
+        .text-label {
+            @apply text-sm font-medium leading-normal;
+        }
+        
         .fade-in {
             animation: fadeIn 0.3s ease-in-out;
         }
@@ -32,19 +73,19 @@
         }
         
         .btn-primary {
-            @apply bg-[#2C6E6B] hover:bg-[#235956] text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out;
+            @apply bg-[#2C6E6B] hover:bg-[#235956] text-white font-medium py-3 px-6 rounded-lg transition duration-150 ease-in-out text-body-small;
         }
         
         .btn-secondary {
-            @apply bg-[#CBD4C2] hover:bg-[#b8c3ac] text-[#3C4251] font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out;
+            @apply bg-[#CBD4C2] hover:bg-[#b8c3ac] text-[#3C4251] font-medium py-3 px-6 rounded-lg transition duration-150 ease-in-out text-body-small;
         }
         
         .btn-success {
-            @apply bg-[#2C6E6B] hover:bg-[#235956] text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out;
+            @apply bg-[#2C6E6B] hover:bg-[#235956] text-white font-medium py-3 px-6 rounded-lg transition duration-150 ease-in-out text-body-small;
         }
         
         .btn-danger {
-            @apply bg-[#E07A5F] hover:bg-[#d66347] text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out;
+            @apply bg-[#E07A5F] hover:bg-[#d66347] text-white font-medium py-3 px-6 rounded-lg transition duration-150 ease-in-out text-body-small;
         }
         
         .card {
@@ -52,19 +93,31 @@
         }
         
         .badge-new {
-            @apply bg-[#E07A5F] bg-opacity-20 text-[#E07A5F] text-xs font-medium px-2.5 py-0.5 rounded-full;
+            @apply bg-[#E07A5F] bg-opacity-20 text-[#E07A5F] text-caption font-medium px-3 py-1 rounded-full;
         }
         
         .badge-acknowledged {
-            @apply bg-[#2C6E6B] bg-opacity-20 text-[#2C6E6B] text-xs font-medium px-2.5 py-0.5 rounded-full;
+            @apply bg-[#2C6E6B] bg-opacity-20 text-[#2C6E6B] text-caption font-medium px-3 py-1 rounded-full;
         }
         
         .form-input {
-            @apply w-full rounded-md border-2 border-[#CBD4C2] shadow-sm focus:border-[#2C6E6B] focus:ring focus:ring-[#2C6E6B] focus:ring-opacity-50;
+            @apply w-full rounded-lg border-2 border-[#CBD4C2] shadow-sm focus:border-[#2C6E6B] focus:ring focus:ring-[#2C6E6B] focus:ring-opacity-50 text-body p-3;
         }
         
         .form-label {
-            @apply block text-sm font-medium text-[#3C4251] mb-1;
+            @apply block text-label text-[#3C4251] mb-2;
+        }
+        
+        .nav-link {
+            @apply inline-flex items-center px-4 py-2 border-b-2 text-body-small font-medium transition-colors duration-200;
+        }
+        
+        .nav-link-active {
+            @apply border-[#2C6E6B] text-[#3C4251];
+        }
+        
+        .nav-link-inactive {
+            @apply border-transparent text-gray-500 hover:text-[#3C4251] hover:border-[#CBD4C2];
         }
         
         @media (max-width: 640px) {
@@ -75,49 +128,59 @@
             .mobile-menu.active {
                 @apply block;
             }
+            
+            .text-display {
+                @apply text-3xl;
+            }
+            
+            .text-heading-1 {
+                @apply text-2xl;
+            }
         }
     </style>
 </head>
-<body class="bg-[#F4EDE8] text-[#3C4251] min-h-screen flex flex-col">
+<body class="bg-[#F4EDE8] text-[#3C4251] min-h-screen flex flex-col text-body">
     <header class="bg-[#FAF9F6] shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
                     <a href="{% url 'home' %}" class="flex-shrink-0 flex items-center">
-                        <span class="text-[#2C6E6B] font-bold text-xl">Sécur'Âge</span>
-                        <i data-lucide="shield-check" class="ml-2 text-[#2C6E6B]"></i>
+                        <span class="text-[#2C6E6B] font-bold text-heading-3">Sécur'Âge</span>
+                        <i data-lucide="shield-check" class="ml-2 text-[#2C6E6B] w-6 h-6"></i>
                     </a>
                 </div>
                 
                 <nav class="hidden sm:flex sm:items-center">
                     {% if user.is_authenticated %}
                         <div class="flex space-x-8">
-                            <a href="{% url 'home' %}" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {% if request.path == '/' %}border-[#2C6E6B] text-[#3C4251]{% else %}border-transparent text-gray-500 hover:text-[#3C4251] hover:border-[#CBD4C2]{% endif %}">
+                            <a href="{% url 'home' %}" class="nav-link {% if request.path == '/' %}nav-link-active{% else %}nav-link-inactive{% endif %}">
                                 Home
                             </a>
-                            <a href="{% url 'detection:alerts' %}" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {% if 'alerts' in request.path and not 'acknowledge' in request.path %}border-[#2C6E6B] text-[#3C4251]{% else %}border-transparent text-gray-500 hover:text-[#3C4251] hover:border-[#CBD4C2]{% endif %}">
+                            <a href="{% url 'detection:alerts' %}" class="nav-link {% if 'alerts' in request.path and not 'acknowledge' in request.path %}nav-link-active{% else %}nav-link-inactive{% endif %}">
                                 Alerts
                             </a>
-                            <a href="{% url 'detection:test_detection' %}" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {% if 'test' in request.path %}border-[#2C6E6B] text-[#3C4251]{% else %}border-transparent text-gray-500 hover:text-[#3C4251] hover:border-[#CBD4C2]{% endif %}">
+                            <a href="{% url 'detection:test_detection' %}" class="nav-link {% if 'test' in request.path %}nav-link-active{% else %}nav-link-inactive{% endif %}">
                                 Test Detection
                             </a>
                         </div>
                     {% endif %}
                 </nav>
                 
-                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                <div class="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
                     {% if user.is_authenticated %}
-                        <span class="text-sm text-[#3C4251] mr-4">Hello, {{ user.username }}</span>
+                        <span class="text-body-small text-[#3C4251]">Hello, {{ user.username }}</span>
                         <form method="post" action="{% url 'accounts:logout' %}" class="inline">
                             {% csrf_token %}
-                            <button type="submit" class="text-sm text-[#3C4251] hover:text-[#2C6E6B]">Log out</button>
+                            <button type="submit" class="text-body-small text-[#3C4251] hover:text-[#2C6E6B] transition-colors">Log out</button>
                         </form>
                     {% endif %}
                 </div>
                 
                 <div class="flex items-center sm:hidden">
                     <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-[#3C4251] hover:text-[#2C6E6B] hover:bg-[#F4EDE8] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#2C6E6B]">
-                        ☰
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
                     </button>
                 </div>
             </div>
@@ -126,13 +189,13 @@
         <div id="mobile-menu" class="mobile-menu sm:hidden">
             <div class="pt-2 pb-3 space-y-1">
                 {% if user.is_authenticated %}
-                    <a href="{% url 'home' %}" class="block pl-3 pr-4 py-2 border-l-4 {% if request.path == '/' %}border-[#2C6E6B] bg-[#F4EDE8] text-[#2C6E6B]{% else %}border-transparent text-[#3C4251] hover:bg-[#F4EDE8] hover:border-[#CBD4C2] hover:text-[#2C6E6B]{% endif %}">
+                    <a href="{% url 'home' %}" class="block pl-3 pr-4 py-3 border-l-4 text-body-small {% if request.path == '/' %}border-[#2C6E6B] bg-[#F4EDE8] text-[#2C6E6B]{% else %}border-transparent text-[#3C4251] hover:bg-[#F4EDE8] hover:border-[#CBD4C2] hover:text-[#2C6E6B]{% endif %}">
                         Home
                     </a>
-                    <a href="{% url 'detection:alerts' %}" class="block pl-3 pr-4 py-2 border-l-4 {% if 'alerts' in request.path and not 'acknowledge' in request.path %}border-[#2C6E6B] bg-[#F4EDE8] text-[#2C6E6B]{% else %}border-transparent text-[#3C4251] hover:bg-[#F4EDE8] hover:border-[#CBD4C2] hover:text-[#2C6E6B]{% endif %}">
+                    <a href="{% url 'detection:alerts' %}" class="block pl-3 pr-4 py-3 border-l-4 text-body-small {% if 'alerts' in request.path and not 'acknowledge' in request.path %}border-[#2C6E6B] bg-[#F4EDE8] text-[#2C6E6B]{% else %}border-transparent text-[#3C4251] hover:bg-[#F4EDE8] hover:border-[#CBD4C2] hover:text-[#2C6E6B]{% endif %}">
                         Alerts
                     </a>
-                    <a href="{% url 'detection:test_detection' %}" class="block pl-3 pr-4 py-2 border-l-4 {% if 'test' in request.path %}border-[#2C6E6B] bg-[#F4EDE8] text-[#2C6E6B]{% else %}border-transparent text-[#3C4251] hover:bg-[#F4EDE8] hover:border-[#CBD4C2] hover:text-[#2C6E6B]{% endif %}">
+                    <a href="{% url 'detection:test_detection' %}" class="block pl-3 pr-4 py-3 border-l-4 text-body-small {% if 'test' in request.path %}border-[#2C6E6B] bg-[#F4EDE8] text-[#2C6E6B]{% else %}border-transparent text-[#3C4251] hover:bg-[#F4EDE8] hover:border-[#CBD4C2] hover:text-[#2C6E6B]{% endif %}">
                         Test Detection
                     </a>
                 {% endif %}
@@ -141,20 +204,20 @@
                 {% if user.is_authenticated %}
                     <div class="flex items-center px-4">
                         <div class="ml-3">
-                            <div class="text-base font-medium text-[#3C4251]">{{ user.username }}</div>
+                            <div class="text-body font-medium text-[#3C4251]">{{ user.username }}</div>
                         </div>
                     </div>
                     <div class="mt-3 space-y-1">
                         <form method="post" action="{% url 'accounts:logout' %}">
                             {% csrf_token %}
-                            <button type="submit" class="block w-full text-left px-4 py-2 text-base font-medium text-[#3C4251] hover:text-[#2C6E6B] hover:bg-[#F4EDE8]">
+                            <button type="submit" class="block w-full text-left px-4 py-2 text-body font-medium text-[#3C4251] hover:text-[#2C6E6B] hover:bg-[#F4EDE8]">
                                 Log out
                             </button>
                         </form>
                     </div>
                 {% else %}
                     <div class="mt-3 space-y-1">
-                        <a href="{% url 'accounts:login' %}" class="block px-4 py-2 text-base font-medium text-[#3C4251] hover:text-[#2C6E6B] hover:bg-[#F4EDE8]">
+                        <a href="{% url 'accounts:login' %}" class="block px-4 py-2 text-body font-medium text-[#3C4251] hover:text-[#2C6E6B] hover:bg-[#F4EDE8]">
                             Log in
                         </a>
                     </div>
@@ -171,7 +234,7 @@
     
     <footer class="bg-[#FAF9F6] border-t border-[#CBD4C2] py-4">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p class="text-center text-sm text-[#3C4251]">
+            <p class="text-center text-body-small text-[#3C4251]">
                 &copy; {% now "Y" %} Sécur'Âge. All rights reserved.
             </p>
         </div>

@@ -9,21 +9,21 @@
     <!-- Header Section -->
     <div class="mb-8">
         <div class="text-center mb-6">
-        <h1 class="text-4xl font-bold text-[#2C6E6B] mb-2">Fall Detection Dashboard</h1>
-        <p class="text-xl text-[#F4EDE8]">Real-time monitoring and analytics for resident safety</p>
+        <h1 class="text-display text-[#2C6E6B] mb-2">Fall Detection Dashboard</h1>
+        <p class="text-body-large text-[#F4EDE8]">Real-time monitoring and analytics for resident safety</p>
     </div>
 
     <!-- Quick Actions -->
     <div class="flex flex-wrap justify-center gap-4">
         <a href="{% url 'detection:alerts' %}" 
-        class="inline-flex items-center px-6 py-3 bg-[#E07A5F] hover:bg-[#c56a52] text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105">
+        class="btn-danger">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5v3a.75.75 0 001.5 0v-3A.75.75 0 009 9z" clip-rule="evenodd" />
         </svg>
         View All Alerts
         </a>
         <a href="{% url 'detection:test_detection' %}" 
-        class="inline-flex items-center px-6 py-3 bg-[#FAF9F6] hover:bg-[#F4EDE8] text-[#2C6E6B] font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105">
+        class="btn-secondary">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" clip-rule="evenodd" />
         </svg>
@@ -38,9 +38,9 @@
         <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 transform transition-transform hover:scale-105">
         <div class="flex items-center justify-between">
             <div>
-            <p class="text-sm font-medium text-[#3C4251] mb-1">Total Alerts</p>
-            <p class="text-3xl font-bold text-[#2C6E6B]">{{ stats.total_alerts }}</p>
-            <p class="text-xs text-[#3C4251] mt-1">All time</p>
+            <p class="text-label text-[#3C4251] mb-1">Total Alerts</p>
+            <p class="text-heading-1 text-[#2C6E6B]">{{ stats.total_alerts }}</p>
+            <p class="text-caption text-[#3C4251] mt-1">All time</p>
         </div>
         <div class="w-12 h-12 bg-[#E07A5F] bg-opacity-10 rounded-full flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[#E07A5F]" viewBox="0 0 20 20" fill="currentColor">
@@ -54,9 +54,9 @@
     <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 transform transition-transform hover:scale-105">
         <div class="flex items-center justify-between">
         <div>
-            <p class="text-sm font-medium text-[#3C4251] mb-1">Today's Alerts</p>
-            <p class="text-3xl font-bold text-[#E07A5F]">{{ stats.today_alerts }}</p>
-            <p class="text-xs {% if stats.today_vs_yesterday > 0 %}text-red-600{% elif stats.today_vs_yesterday < 0 %}text-green-600{% else %}text-[#3C4251]{% endif %} mt-1">
+            <p class="text-label text-[#3C4251] mb-1">Today's Alerts</p>
+            <p class="text-heading-1 text-[#E07A5F]">{{ stats.today_alerts }}</p>
+            <p class="text-caption {% if stats.today_vs_yesterday > 0 %}text-red-600{% elif stats.today_vs_yesterday < 0 %}text-green-600{% else %}text-[#3C4251]{% endif %} mt-1">
             {% if stats.today_vs_yesterday > 0 %}
                 +{{ stats.today_vs_yesterday }} from yesterday
             {% elif stats.today_vs_yesterday < 0 %}
@@ -78,9 +78,9 @@
     <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 transform transition-transform hover:scale-105">
         <div class="flex items-center justify-between">
         <div>
-            <p class="text-sm font-medium text-[#3C4251] mb-1">Pending Alerts</p>
-            <p class="text-3xl font-bold text-red-600">{{ stats.pending_alerts }}</p>
-            <p class="text-xs text-[#3C4251] mt-1">Need attention</p>
+            <p class="text-label text-[#3C4251] mb-1">Pending Alerts</p>
+            <p class="text-heading-1 text-red-600">{{ stats.pending_alerts }}</p>
+            <p class="text-caption text-[#3C4251] mt-1">Need attention</p>
         </div>
         <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-600" viewBox="0 0 20 20" fill="currentColor">
@@ -94,9 +94,9 @@
     <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 transform transition-transform hover:scale-105">
         <div class="flex items-center justify-between">
         <div>
-            <p class="text-sm font-medium text-[#3C4251] mb-1">Response Rate</p>
-            <p class="text-3xl font-bold text-[#2C6E6B]">{{ stats.response_rate|floatformat:1 }}%</p>
-            <p class="text-xs text-[#3C4251] mt-1">Acknowledged alerts</p>
+            <p class="text-label text-[#3C4251] mb-1">Response Rate</p>
+            <p class="text-heading-1 text-[#2C6E6B]">{{ stats.response_rate|floatformat:1 }}%</p>
+            <p class="text-caption text-[#3C4251] mt-1">Acknowledged alerts</p>
         </div>
         <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" viewBox="0 0 20 20" fill="currentColor">
@@ -110,13 +110,13 @@
     <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 transform transition-transform hover:scale-105">
         <div class="flex items-center justify-between">
         <div>
-            <p class="text-sm font-medium text-[#3C4251] mb-1">Model Accuracy</p>
+            <p class="text-label text-[#3C4251] mb-1">Model Accuracy</p>
             {% if stats.model_accuracy is not None %}
-            <p class="text-3xl font-bold text-[#2C6E6B]">{{ stats.model_accuracy|floatformat:1 }}%</p>
-            <p class="text-xs text-[#3C4251] mt-1">{{ stats.total_marked_accuracy }} alerts marked</p>
+            <p class="text-heading-1 text-[#2C6E6B]">{{ stats.model_accuracy|floatformat:1 }}%</p>
+            <p class="text-caption text-[#3C4251] mt-1">{{ stats.total_marked_accuracy }} alerts marked</p>
             {% else %}
-            <p class="text-3xl font-bold text-gray-400">N/A</p>
-            <p class="text-xs text-[#3C4251] mt-1">No accuracy data yet</p>
+            <p class="text-heading-1 text-gray-400">N/A</p>
+            <p class="text-caption text-[#3C4251] mt-1">No accuracy data yet</p>
             {% endif %}
         </div>
         <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
@@ -133,7 +133,7 @@
     
     <!-- Weekly Activity Chart -->
     <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6">
-        <h3 class="text-lg font-semibold text-[#2C6E6B] mb-4 flex items-center">
+        <h3 class="text-heading-4 text-[#2C6E6B] mb-4 flex items-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
         </svg>
@@ -142,13 +142,13 @@
         <div class="space-y-3">
         {% for day_stat in stats.weekly_activity %}
             <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-[#3C4251]">{{ day_stat.day }}</span>
+            <span class="text-label text-[#3C4251]">{{ day_stat.day }}</span>
             <div class="flex items-center flex-1 mx-4">
                 <div class="flex-1 bg-gray-200 rounded-full h-2">
                 <div class="bg-gradient-to-r from-[#E07A5F] to-[#2C6E6B] h-2 rounded-full transition-all duration-500" 
                         style="width: {{ day_stat.width }}%;"></div>
                 </div>
-                <span class="text-sm font-medium text-[#2C6E6B] ml-3 min-w-8">{{ day_stat.count }}</span>
+                <span class="text-label text-[#2C6E6B] ml-3 min-w-8">{{ day_stat.count }}</span>
             </div>
             </div>
         {% endfor %}
@@ -157,7 +157,7 @@
 
     <!-- Detection Sources -->
     <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6">
-        <h3 class="text-lg font-semibold text-[#2C6E6B] mb-4 flex items-center">
+        <h3 class="text-heading-4 text-[#2C6E6B] mb-4 flex items-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
         </svg>
@@ -169,18 +169,18 @@
             <div class="flex items-center">
                 {% if source.detected_by == 'live_camera' %}
                 <div class="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                <span class="text-sm font-medium text-[#2C6E6B]">Live Camera</span>
+                <span class="text-label text-[#2C6E6B]">Live Camera</span>
                 {% elif source.detected_by == 'test_upload' %}
                 <div class="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
-                <span class="text-sm font-medium text-[#2C6E6B]">Test Upload</span>
+                <span class="text-label text-[#2C6E6B]">Test Upload</span>
                 {% else %}
                 <div class="w-3 h-3 bg-gray-500 rounded-full mr-3"></div>
-                <span class="text-sm font-medium text-[#2C6E6B]">{{ source.detected_by|title }}</span>
+                <span class="text-label text-[#2C6E6B]">{{ source.detected_by|title }}</span>
                 {% endif %}
             </div>
             <div class="flex items-center">
-                <span class="text-lg font-bold text-[#E07A5F] mr-2">{{ source.count }}</span>
-                <span class="text-xs text-[#3C4251]">
+                <span class="text-heading-4 text-[#E07A5F] mr-2">{{ source.count }}</span>
+                <span class="text-caption text-[#3C4251]">
                 ({{ source.percentage|floatformat:1 }}%)
                 </span>
             </div>
@@ -193,14 +193,14 @@
     <!-- Recent Alerts -->
     <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 mb-8">
     <div class="flex items-center justify-between mb-6">
-        <h3 class="text-lg font-semibold text-[#2C6E6B] flex items-center">
+        <h3 class="text-heading-4 text-[#2C6E6B] flex items-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
         </svg>
         Recent Alerts
         </h3>
         <a href="{% url 'detection:alerts' %}" 
-        class="text-sm text-[#2C6E6B] hover:text-[#E07A5F] font-medium transition-colors">
+        class="text-body-small text-[#2C6E6B] hover:text-[#E07A5F] font-medium transition-colors">
         View all →
         </a>
     </div>
@@ -225,31 +225,31 @@
                 <div>
                 <div class="flex items-center space-x-2 mb-1">
                     {% if alert.detected_by == 'live_camera' %}
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span class="badge-new">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
                         </svg>
                         Live
                     </span>
                     {% else %}
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                    <span class="badge-acknowledged">
                         Test
                     </span>
                     {% endif %}
                     
                     {% if not alert.acknowledged %}
-                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <span class="badge-new">
                         New
                     </span>
                     {% endif %}
                 </div>
                 
-                <p class="text-sm font-medium text-[#2C6E6B]">
+                <p class="text-label text-[#2C6E6B]">
                     {{ alert.timestamp|date:"M d, Y H:i" }}
                 </p>
                 
                 {% if alert.yolo_confidence %}
-                    <p class="text-xs text-[#3C4251]">
+                    <p class="text-caption text-[#3C4251]">
                     Confidence: {{ alert.yolo_confidence|floatformat:1 }}%
                     </p>
                 {% endif %}
@@ -259,11 +259,11 @@
             <div class="text-right">
                 {% if not alert.acknowledged %}
                 <a href="{% url 'detection:acknowledge_alert' alert.id %}" 
-                    class="inline-flex items-center px-3 py-1 bg-[#2C6E6B] hover:bg-[#1f4f4c] text-white text-xs font-medium rounded-lg transition-colors">
+                    class="btn-primary">
                     Acknowledge
                 </a>
                 {% else %}
-                <span class="text-xs text-green-600 font-medium">Acknowledged</span>
+                <span class="text-caption text-green-600 font-medium">Acknowledged</span>
                 {% endif %}
             </div>
             </div>
@@ -274,7 +274,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-2.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 009.586 13H7" />
         </svg>
-        <p class="text-[#3C4251]">No recent alerts</p>
+        <p class="text-body text-[#3C4251]">No recent alerts</p>
         </div>
     {% endif %}
     </div>
@@ -284,7 +284,7 @@
     
     <!-- System Health -->
     <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6">
-        <h3 class="text-lg font-semibold text-[#2C6E6B] mb-4 flex items-center">
+        <h3 class="text-heading-4 text-[#2C6E6B] mb-4 flex items-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd" />
         </svg>
@@ -292,29 +292,29 @@
         </h3>
         <div class="space-y-3">
         <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-[#3C4251]">Detection Model</span>
-            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <span class="text-label text-[#3C4251]">Detection Model</span>
+            <span class="badge-acknowledged">
             <div class="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
             Online
             </span>
         </div>
         <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-[#3C4251]">Database</span>
-            <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+            <span class="text-label text-[#3C4251]">Database</span>
+            <span class="badge-acknowledged">
             <div class="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
             Connected
             </span>
         </div>
         <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-[#3C4251]">Last Update</span>
-            <span class="text-xs text-[#3C4251]">{{ stats.last_alert_time|default:"Never"|date:"M d, H:i" }}</span>
+            <span class="text-label text-[#3C4251]">Last Update</span>
+            <span class="text-caption text-[#3C4251]">{{ stats.last_alert_time|default:"Never"|date:"M d, H:i" }}</span>
         </div>
         </div>
     </div>
 
     <!-- Quick Stats -->
     <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6">
-        <h3 class="text-lg font-semibold text-[#2C6E6B] mb-4 flex items-center">
+        <h3 class="text-heading-4 text-[#2C6E6B] mb-4 flex items-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
             <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
@@ -323,21 +323,21 @@
         </h3>
         <div class="space-y-3">
         <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-[#3C4251]">Avg. Daily Alerts</span>
-            <span class="text-sm font-bold text-[#E07A5F]">{{ stats.avg_daily_alerts|floatformat:1 }}</span>
+            <span class="text-label text-[#3C4251]">Avg. Daily Alerts</span>
+            <span class="text-label font-bold text-[#E07A5F]">{{ stats.avg_daily_alerts|floatformat:1 }}</span>
         </div>
         <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-[#3C4251]">Peak Hour</span>
-            <span class="text-sm font-bold text-[#E07A5F]">{{ stats.peak_hour|default:"N/A" }}</span>
+            <span class="text-label text-[#3C4251]">Peak Hour</span>
+            <span class="text-label font-bold text-[#E07A5F]">{{ stats.peak_hour|default:"N/A" }}</span>
         </div>
         <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-[#3C4251]">Avg. Response Time</span>
-            <span class="text-sm font-bold text-[#E07A5F]">{{ stats.avg_response_time|default:"N/A" }}</span>
+            <span class="text-label text-[#3C4251]">Avg. Response Time</span>
+            <span class="text-label font-bold text-[#E07A5F]">{{ stats.avg_response_time|default:"N/A" }}</span>
         </div>
         {% if stats.model_accuracy is not None %}
         <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-[#3C4251]">Model Accuracy</span>
-            <span class="text-sm font-bold text-[#2C6E6B]">{{ stats.model_accuracy|floatformat:1 }}%</span>
+            <span class="text-label text-[#3C4251]">Model Accuracy</span>
+            <span class="text-label font-bold text-[#2C6E6B]">{{ stats.model_accuracy|floatformat:1 }}%</span>
         </div>
         {% endif %}
         </div>
