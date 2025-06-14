@@ -35,10 +35,17 @@ from .models import FallAlert
 from .forms import TestDetectionForm
 from .services import FallDetectionService
 from .services import VideoClipService
-from .tracking import fall_tracker, FallState
 
 # Instantiate the fall detection service globally to avoid reloading the model on every request
 fall_service = FallDetectionService(conf_threshold=0.70)
+
+# Import tracking system
+try:
+    from .tracking import fall_tracker, FallState
+    TRACKING_ENABLED = True
+except ImportError:
+    TRACKING_ENABLED = False
+    print("⚠️ Tracking system not available")
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     """
@@ -64,8 +71,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         yesterday_alerts = FallAlert.objects.filter(timestamp__date=yesterday).count()
         pending_alerts = FallAlert.objects.filter(acknowledged=False).count()
         
-        # Urgent alerts count
-        urgent_alerts = FallAlert.objects.filter(fall_state='urgent', acknowledged=False).count()
+        # Urgent alerts count (only if fall_state field exists)
+        try:
+            urgent_alerts = FallAlert.objects.filter(fall_state='urgent', acknowledged=False).count()
+        except:
+            urgent_alerts = 0
         
         # Response rate calculation
         total_real_alerts = FallAlert.objects.exclude(detected_by="test_upload").count()
@@ -201,10 +211,13 @@ class AlertListView(LoginRequiredMixin, ListView):
             elif "new" in status and "acknowledged" not in status:
                 qs = qs.filter(acknowledged=False)
         
-        # Filter by fall state
+        # Filter by fall state (only if field exists)
         fall_state = self.request.GET.getlist("fall_state")
         if fall_state:
-            qs = qs.filter(fall_state__in=fall_state)
+            try:
+                qs = qs.filter(fall_state__in=fall_state)
+            except:
+                pass  # Ignore if field doesn't exist yet
             
         # Sorting
         sort = self.request.GET.get("sort")
@@ -351,14 +364,18 @@ class TestDetectionView(LoginRequiredMixin, FormView):
 
             # --- 6. if fall → create test alert in DB ---
             if fall_detected:
-                alert = FallAlert.objects.create(
-                    detected_by    = "test_upload",
-                    description    = description or f"Test upload: {upload.name}",
-                    yolo_confidence= confidence,
-                    yolo_class     = "Fall-Detected",
-                    fall_state     = "monitoring",  # Test uploads start as monitoring
-                )
-                # 2️⃣ persist the original frame as the snapshot
+                alert_data = {
+                    "detected_by": "test_upload",
+                    "description": description or f"Test upload: {upload.name}",
+                    "yolo_confidence": confidence,
+                    "yolo_class": "Fall-Detected",
+                }
+                
+                # Add fall_state if tracking is enabled
+                if TRACKING_ENABLED:
+                    alert_data["fall_state"] = "monitoring"  # Test uploads start as monitoring
+                
+                alert = FallAlert.objects.create(**alert_data)
                 alert.save_snapshot_from_frame(frame)
                 alert.save()
                 messages.success(self.request, "Fall detected ! Alerte créée.")
@@ -443,15 +460,20 @@ class CreateAlertView(LoginRequiredMixin, View):
                 return JsonResponse({"status":"updated","alert_id":alert.id}, status=200)
 
         # 3. Sinon, créer une nouvelle alerte
-        alert = FallAlert(
-            detected_by     = alert_type,
-            description     = description or ("Fall detected via YOLOv8"
-                                              if alert_type=="live_camera" else ""),
-            yolo_confidence = yolo_conf,
-            yolo_class      = yolo_cls,
-            metadata        = metadata,
-            fall_state      = "monitoring",  # Start with monitoring state
-        )
+        alert_data = {
+            "detected_by": alert_type,
+            "description": description or ("Fall detected via YOLOv8"
+                                          if alert_type=="live_camera" else ""),
+            "yolo_confidence": yolo_conf,
+            "yolo_class": yolo_cls,
+            "metadata": metadata,
+        }
+        
+        # Add fall_state if tracking is enabled
+        if TRACKING_ENABLED:
+            alert_data["fall_state"] = "monitoring"  # Start with monitoring state
+        
+        alert = FallAlert(**alert_data)
         alert.save()
 
         # 4. Attacher snapshot
@@ -525,22 +547,26 @@ class RunYoloView(View):
             if not fall_detected:
                 return JsonResponse({"fall": False}, status=200)
             
-            # Extract bounding box for tracking
-            bbox = None
-            for r in results:
-                for box in r.boxes:
-                    if r.names[int(box.cls)] == "Fall-Detected":
-                        bbox = tuple(map(int, box.xyxy[0].tolist()))
+            # Initialize tracking variables
+            fall_state_value = "monitoring"
+            time_on_ground = 0
+            
+            # Extract bounding box for tracking (if tracking is enabled)
+            if TRACKING_ENABLED:
+                bbox = None
+                for r in results:
+                    for box in r.boxes:
+                        if r.names[int(box.cls)] == "Fall-Detected":
+                            bbox = tuple(map(int, box.xyxy[0].tolist()))
+                            break
+                    if bbox:
                         break
+                
                 if bbox:
-                    break
-            
-            if not bbox:
-                return JsonResponse({"fall": False}, status=200)
-            
-            # Update fall tracker
-            person_id = "live_camera_person"  # Single person tracking for live camera
-            fall_state, time_on_ground = fall_tracker.update_detection(person_id, bbox)
+                    # Update fall tracker
+                    person_id = "live_camera_person"  # Single person tracking for live camera
+                    fall_state, time_on_ground = fall_tracker.update_detection(person_id, bbox)
+                    fall_state_value = fall_state.value
             
         except Exception as e:
             return JsonResponse({"error": f"YOLO inference error: {str(e)}"}, status=500)
@@ -558,27 +584,36 @@ class RunYoloView(View):
             )
             if alert:
                 alert.yolo_confidence = confidence
-                alert.fall_state = fall_state.value
-                alert.time_on_ground = time_on_ground
+                if TRACKING_ENABLED:
+                    alert.fall_state = fall_state_value
+                    alert.time_on_ground = time_on_ground
                 alert.save()
                 alert.save_snapshot_from_frame(img)
                 alert.save()
         else:
-            alert = FallAlert.objects.create(
-                detected_by     = "live_camera",
-                description     = "Fall detected via YOLOv8",
-                yolo_confidence = confidence,
-                yolo_class      = "Fall-Detected",
-                fall_state      = fall_state.value,
-                time_on_ground  = time_on_ground,
-            )
+            alert_data = {
+                "detected_by": "live_camera",
+                "description": "Fall detected via YOLOv8",
+                "yolo_confidence": confidence,
+                "yolo_class": "Fall-Detected",
+            }
+            
+            if TRACKING_ENABLED:
+                alert_data["fall_state"] = fall_state_value
+                alert_data["time_on_ground"] = time_on_ground
+            
+            alert = FallAlert.objects.create(**alert_data)
             alert.save_snapshot_from_frame(img)
             alert.save()
             cache.set(self.CACHE_KEY, now.timestamp(), timeout=None)
 
-        return JsonResponse({
+        response_data = {
             "fall": True, 
             "confidence": confidence,
-            "fall_state": fall_state.value,
-            "time_on_ground": time_on_ground
-        }, status=200)
+        }
+        
+        if TRACKING_ENABLED:
+            response_data["fall_state"] = fall_state_value
+            response_data["time_on_ground"] = time_on_ground
+        
+        return JsonResponse(response_data, status=200)
