@@ -107,7 +107,7 @@
                 <input type="checkbox" name="status" value="acknowledged"
                       class="form-checkbox text-[#2C6E6B] rounded focus:ring-[#2C6E6B]"
                       {% if 'acknowledged' in status_selected %}checked{% endif %} onchange="this.form.submit()">
-                <span class="ml-1 text-xs text-[#3C4251]">Ack'd</span>
+                <span class="ml-1 text-xs text-[#3C4251]">Accurate</span>
               </label>
             </div>
           </div>
@@ -195,7 +195,7 @@
                           <div class="bg-gradient-to-r from-[#E07A5F] to-[#2C6E6B] h-2 rounded-full"
                               style="width: {{ alert.yolo_confidence|floatformat:0 }}%"></div>
                         </div>
-                        <span class="text-sm font-medium text-[#2C6E6B]">{{ alert.yolo_confidence|floatformat:1 }}%</span>
+                        <span class="text-sm font-medium text-[#2C6E6B]">{{ alert.yolo_confidence|floatformat:2 }}</span>
                       </div>
                     {% else %}
                       <span class="text-sm text-gray-400">N/A</span>
