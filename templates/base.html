@@ -1,0 +1,200 @@
+{% load tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sécur'Âge - {% block title %}Fall Detection System{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://unpkg.com/lucide-icons" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    {% tailwind_css %}
+    <style>
+        :root {
+            --deep-teal: #2C6E6B;
+            --warm-coral: #E07A5F;
+            --soft-blush: #F4EDE8;
+            --charcoal-gray: #3C4251;
+            --muted-mustard: #E9C46A;
+            --cool-slate: #CBD4C2;
+            --off-white: #FAF9F6;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .btn-primary {
+            @apply bg-[#2C6E6B] hover:bg-[#235956] text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out;
+        }
+        
+        .btn-secondary {
+            @apply bg-[#CBD4C2] hover:bg-[#b8c3ac] text-[#3C4251] font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out;
+        }
+        
+        .btn-success {
+            @apply bg-[#2C6E6B] hover:bg-[#235956] text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out;
+        }
+        
+        .btn-danger {
+            @apply bg-[#E07A5F] hover:bg-[#d66347] text-white font-medium py-2 px-4 rounded-md transition duration-150 ease-in-out;
+        }
+        
+        .card {
+            @apply bg-[#FAF9F6] rounded-lg shadow-md p-6;
+        }
+        
+        .badge-new {
+            @apply bg-[#E07A5F] bg-opacity-20 text-[#E07A5F] text-xs font-medium px-2.5 py-0.5 rounded-full;
+        }
+        
+        .badge-acknowledged {
+            @apply bg-[#2C6E6B] bg-opacity-20 text-[#2C6E6B] text-xs font-medium px-2.5 py-0.5 rounded-full;
+        }
+        
+        .form-input {
+            @apply w-full rounded-md border-2 border-[#CBD4C2] shadow-sm focus:border-[#2C6E6B] focus:ring focus:ring-[#2C6E6B] focus:ring-opacity-50;
+        }
+        
+        .form-label {
+            @apply block text-sm font-medium text-[#3C4251] mb-1;
+        }
+        
+        @media (max-width: 640px) {
+            .mobile-menu {
+                @apply hidden;
+            }
+            
+            .mobile-menu.active {
+                @apply block;
+            }
+        }
+    </style>
+</head>
+<body class="bg-[#F4EDE8] text-[#3C4251] min-h-screen flex flex-col">
+    <header class="bg-[#FAF9F6] shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="{% url 'home' %}" class="flex-shrink-0 flex items-center">
+                        <span class="text-[#2C6E6B] font-bold text-xl">Sécur'Âge</span>
+                        <i data-lucide="shield-check" class="ml-2 text-[#2C6E6B]"></i>
+                    </a>
+                </div>
+                
+                <nav class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'home' %}" class="inline-flex items-center px-1 pt-1 border-b-2 {% if request.path == '/' %}border-[#2C6E6B] text-[#3C4251]{% else %}border-transparent text-gray-500 hover:text-[#3C4251] hover:border-[#CBD4C2]{% endif %}">
+                            Home
+                        </a>
+                        <a href="{% url 'detection:alerts' %}" class="inline-flex items-center px-1 pt-1 border-b-2 {% if 'alerts' in request.path and not 'acknowledge' in request.path %}border-[#2C6E6B] text-[#3C4251]{% else %}border-transparent text-gray-500 hover:text-[#3C4251] hover:border-[#CBD4C2]{% endif %}">
+                            Alerts
+                        </a>
+                        <a href="{% url 'detection:test_detection' %}" class="inline-flex items-center px-1 pt-1 border-b-2 {% if 'test' in request.path %}border-[#2C6E6B] text-[#3C4251]{% else %}border-transparent text-gray-500 hover:text-[#3C4251] hover:border-[#CBD4C2]{% endif %}">
+                            Test Detection
+                        </a>
+                    {% endif %}
+                </nav>
+                
+                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                    {% if user.is_authenticated %}
+                        <span class="text-sm text-[#3C4251] mr-4">Hello, {{ user.username }}</span>
+                        <form method="post" action="{% url 'accounts:logout' %}" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="text-sm text-[#3C4251] hover:text-[#2C6E6B]">Log out</button>
+                        </form>
+                    {% endif %}
+                </div>
+                
+                <div class="flex items-center sm:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-[#3C4251] hover:text-[#2C6E6B] hover:bg-[#F4EDE8] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#2C6E6B]">
+                        ☰
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="mobile-menu" class="mobile-menu sm:hidden">
+            <div class="pt-2 pb-3 space-y-1">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'home' %}" class="block pl-3 pr-4 py-2 border-l-4 {% if request.path == '/' %}border-[#2C6E6B] bg-[#F4EDE8] text-[#2C6E6B]{% else %}border-transparent text-[#3C4251] hover:bg-[#F4EDE8] hover:border-[#CBD4C2] hover:text-[#2C6E6B]{% endif %}">
+                        Home
+                    </a>
+                    <a href="{% url 'detection:alerts' %}" class="block pl-3 pr-4 py-2 border-l-4 {% if 'alerts' in request.path and not 'acknowledge' in request.path %}border-[#2C6E6B] bg-[#F4EDE8] text-[#2C6E6B]{% else %}border-transparent text-[#3C4251] hover:bg-[#F4EDE8] hover:border-[#CBD4C2] hover:text-[#2C6E6B]{% endif %}">
+                        Alerts
+                    </a>
+                    <a href="{% url 'detection:test_detection' %}" class="block pl-3 pr-4 py-2 border-l-4 {% if 'test' in request.path %}border-[#2C6E6B] bg-[#F4EDE8] text-[#2C6E6B]{% else %}border-transparent text-[#3C4251] hover:bg-[#F4EDE8] hover:border-[#CBD4C2] hover:text-[#2C6E6B]{% endif %}">
+                        Test Detection
+                    </a>
+                {% endif %}
+            </div>
+            <div class="pt-4 pb-3 border-t border-[#CBD4C2]">
+                {% if user.is_authenticated %}
+                    <div class="flex items-center px-4">
+                        <div class="ml-3">
+                            <div class="text-base font-medium text-[#3C4251]">{{ user.username }}</div>
+                        </div>
+                    </div>
+                    <div class="mt-3 space-y-1">
+                        <form method="post" action="{% url 'accounts:logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="block w-full text-left px-4 py-2 text-base font-medium text-[#3C4251] hover:text-[#2C6E6B] hover:bg-[#F4EDE8]">
+                                Log out
+                            </button>
+                        </form>
+                    </div>
+                {% else %}
+                    <div class="mt-3 space-y-1">
+                        <a href="{% url 'accounts:login' %}" class="block px-4 py-2 text-base font-medium text-[#3C4251] hover:text-[#2C6E6B] hover:bg-[#F4EDE8]">
+                            Log in
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </header>
+    
+    <main class="flex-1">
+        <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 fade-in">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+    
+    <footer class="bg-[#FAF9F6] border-t border-[#CBD4C2] py-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <p class="text-center text-sm text-[#3C4251]">
+                &copy; {% now "Y" %} Sécur'Âge. All rights reserved.
+            </p>
+        </div>
+    </footer>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+        lucide.createIcons();
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('active');
+                });
+            }
+        });
+    </script>
+    
+    {% if debug %}
+        {% load django_browser_reload %}
+        {% django_browser_reload_script %}
+    {% endif %}
+</body>
+</html>
