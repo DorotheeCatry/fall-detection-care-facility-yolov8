@@ -221,12 +221,13 @@
                   <!-- Confidence -->
                   <td class="px-2 py-2 whitespace-nowrap">
                     {% if alert.yolo_confidence is not None %}
+                      {% widthratio alert.yolo_confidence 1 100 as confidence_percent %}
                       <div class="flex items-center">
                         <div class="flex-1 bg-gray-200 rounded-full h-2 mr-2">
                           <div class="bg-gradient-to-r from-[#E07A5F] to-[#2C6E6B] h-2 rounded-full"
-                              style="width: {{ alert.yolo_confidence|floatformat:2|add:'0'|mul:'100' }}%"></div>
+                              style="width: {{ confidence_percent }}%"></div>
                         </div>
-                        <span class="text-xs font-medium text-[#2C6E6B]">{{ alert.yolo_confidence|floatformat:2|mul:'100' }}%</span>
+                        <span class="text-xs font-medium text-[#2C6E6B]">{{ confidence_percent }}%</span>
                       </div>
                     {% else %}
                       <span class="text-xs text-gray-400">N/A</span>
