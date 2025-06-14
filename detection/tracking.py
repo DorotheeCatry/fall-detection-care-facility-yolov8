@@ -13,24 +13,24 @@ from enum import Enum
 # Description et niveau de besoin d'intervention pour chaque état
 STATE_DESCRIPTION_MAP = {
     "monitoring": {
-        "description": "Personne normale, surveillance",
+        "description": "Person has gotten up, monitoring",
         "needs_help": False,
-        "level": "🟡 Surveillance"
+        "level": "🟡 Monitoring"
     },
     "alert": {
-        "description": "Personne au sol depuis un moment",
-        "needs_help": "Potentiellement",
-        "level": "🟠 Alerte"
+        "description": "Person has been on the ground for a while",
+        "needs_help": "Potentially",
+        "level": "🟠 Alert"
     },
     "urgent": {
-        "description": "Personne immobile au sol longtemps",
+        "description": "Person immobile on the ground for a long time",
         "needs_help": True,
-        "level": "🔴 Alerte urgente"
+        "level": "🔴 Urgent Alert"
     },
     "recovered": {
-        "description": "Personne s'est relevée seule",
+        "description": "Person got up by themselves",
         "needs_help": False,
-        "level": "🟢 Récupéré"
+        "level": "🟢 Recovered"
     },
 }
 
