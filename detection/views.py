@@ -512,14 +512,14 @@ class CreateAlertView(LoginRequiredMixin, View):
 class RunYoloView(View):
     """
     API endpoint to run YOLO inference on a base64 image and (optionally) create/update a live_camera alert.
-    Throttles alert creation to avoid duplicates and integrates fall tracking.
+    Throttles alert creation to avoid duplicates and integrates fall tracking with improved persistence.
     """
     THRESHOLD_SECS = 30         # Do not create more than one alert every 30 seconds
     CACHE_KEY      = "last_live_alert_ts"
 
     def post(self, request, *args, **kwargs):
         """
-        Handle POST request with base64 image, run YOLO inference, and manage alert creation with tracking.
+        Handle POST request with base64 image, run YOLO inference, and manage alert creation with improved tracking.
         """
         try:
             payload = json.loads(request.body.decode("utf-8"))
@@ -544,13 +544,34 @@ class RunYoloView(View):
             results = fall_service.run_model(img)
             fall_detected, confidence = fall_service.detect_falls(img)
             
-            if not fall_detected:
-                return JsonResponse({"fall": False}, status=200)
-            
             # Initialize tracking variables
             fall_state_value = "monitoring"
             time_on_ground = 0
             bbox_data = None
+            
+            # Always update missed detections counter (even if no fall detected)
+            if TRACKING_ENABLED:
+                fall_tracker.update_missed_detections()
+            
+            if not fall_detected:
+                # Check if we have persistent states to return
+                if TRACKING_ENABLED:
+                    persistent_states = fall_tracker.get_persistent_states()
+                    if persistent_states:
+                        # Return the most urgent persistent state
+                        person_id = "live_camera_person"
+                        if person_id in persistent_states:
+                            state = persistent_states[person_id]
+                            return JsonResponse({
+                                "fall": True,
+                                "confidence": 0.8,  # Confidence persistante
+                                "fall_state": state.current_state.value,
+                                "time_on_ground": state.time_on_ground(),
+                                "bbox": None,  # Pas de nouvelle bbox
+                                "persistent": True  # Indique que c'est un état persistant
+                            }, status=200)
+                
+                return JsonResponse({"fall": False}, status=200)
             
             # Extract bounding box for tracking (if tracking is enabled)
             if TRACKING_ENABLED:

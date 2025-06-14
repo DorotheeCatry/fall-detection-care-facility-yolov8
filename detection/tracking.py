@@ -1,5 +1,6 @@
 """
 Système de suivi temporel des chutes pour déterminer le niveau d'urgence.
+Version améliorée avec persistance et tolérance aux interruptions.
 """
 
 import time
@@ -48,18 +49,20 @@ class PersonState:
     last_position: Optional[Tuple[int, int]] = None
     movement_detected: bool = False
     current_state: FallState = FallState.MONITORING
+    missed_detections: int = 0  # Compteur de détections ratées
+    max_missed: int = 10        # Tolérance avant abandon
     
     def time_on_ground(self) -> float:
         """Retourne le temps passé au sol en secondes."""
         return time.time() - self.first_detected
     
-    def update_movement(self, current_position: Tuple[int, int], threshold: int = 20) -> bool:
+    def update_movement(self, current_position: Tuple[int, int], threshold: int = 30) -> bool:
         """
         Détecte si la personne a bougé depuis la dernière position.
         
         Args:
             current_position: Position actuelle (x, y)
-            threshold: Seuil de mouvement en pixels
+            threshold: Seuil de mouvement en pixels (augmenté pour plus de tolérance)
             
         Returns:
             True si mouvement détecté
@@ -84,6 +87,10 @@ class PersonState:
         """Détermine le niveau d'urgence basé sur le temps et le mouvement."""
         time_elapsed = self.time_on_ground()
         
+        # Une fois urgent, reste urgent même si détection intermittente
+        if self.current_state == FallState.URGENT and time_elapsed > 25:
+            return FallState.URGENT
+        
         if time_elapsed > 30:  # Plus de 30 secondes
             if not self.movement_detected:
                 return FallState.URGENT  # Immobile = urgent
@@ -93,11 +100,24 @@ class PersonState:
             return FallState.ALERT
         else:  # Moins de 10 secondes
             return FallState.MONITORING
+    
+    def mark_missed(self):
+        """Marque une détection ratée."""
+        self.missed_detections += 1
+    
+    def mark_found(self):
+        """Remet à zéro le compteur de détections ratées."""
+        self.missed_detections = 0
+        self.last_seen = time.time()
+    
+    def should_keep_alive(self) -> bool:
+        """Détermine si on doit garder ce tracking malgré les détections ratées."""
+        return self.missed_detections < self.max_missed
 
 class FallTracker:
     """Gestionnaire de suivi des chutes avec états temporels."""
     
-    def __init__(self, timeout: float = 60.0):
+    def __init__(self, timeout: float = 120.0):  # Augmenté à 2 minutes
         """
         Args:
             timeout: Temps après lequel on considère qu'une personne n'est plus suivie
@@ -133,7 +153,7 @@ class FallTracker:
         else:
             # Mise à jour d'une détection existante
             state = self.person_states[person_id]
-            state.last_seen = current_time
+            state.mark_found()  # Remet à zéro le compteur de ratés
             state.update_movement(current_position)
         
         # Calculer le niveau d'urgence
@@ -142,6 +162,43 @@ class FallTracker:
         state.current_state = urgency
         
         return urgency, state.time_on_ground()
+    
+    def update_missed_detections(self):
+        """
+        Met à jour les compteurs pour les personnes non détectées dans cette frame.
+        À appeler à chaque frame même quand YOLO ne détecte rien.
+        """
+        current_time = time.time()
+        to_remove = []
+        
+        for person_id, state in self.person_states.items():
+            # Si pas vu depuis plus de 2 secondes, marquer comme raté
+            if current_time - state.last_seen > 2.0:
+                state.mark_missed()
+                
+                # Si trop de ratés, supprimer
+                if not state.should_keep_alive():
+                    to_remove.append(person_id)
+        
+        for person_id in to_remove:
+            del self.person_states[person_id]
+    
+    def get_persistent_states(self) -> Dict[str, PersonState]:
+        """
+        Retourne les états persistants même sans détection récente.
+        Utile pour maintenir l'affichage même quand YOLO rate quelques frames.
+        """
+        current_time = time.time()
+        active_states = {}
+        
+        for person_id, state in self.person_states.items():
+            # Garder les états récents ou urgents
+            time_since_last_seen = current_time - state.last_seen
+            if (time_since_last_seen < 5.0 or  # Vu récemment
+                state.current_state == FallState.URGENT):  # Ou urgent
+                active_states[person_id] = state
+                
+        return active_states
     
     def get_state_info(self, state_str: str) -> dict:
         """
