@@ -13,7 +13,7 @@ from enum import Enum
 # Description et niveau de besoin d'intervention pour chaque état
 STATE_DESCRIPTION_MAP = {
     "monitoring": {
-        "description": "Person has gotten up, monitoring",
+        "description": "Normal person, monitoring",
         "needs_help": False,
         "level": "🟡 Monitoring"
     },
@@ -99,7 +99,7 @@ class PersonState:
         elif time_elapsed > 10:  # Entre 10 et 30 secondes
             return FallState.ALERT
         else:  # Moins de 10 secondes
-            return FallState.MONITORING
+            return FallState.RECOVERED
     
     def mark_missed(self):
         """Marque une détection ratée."""
