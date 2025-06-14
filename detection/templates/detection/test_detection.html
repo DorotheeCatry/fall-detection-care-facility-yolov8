@@ -9,11 +9,11 @@
     <!-- Header Section -->
     <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center">
       <div>
-        <h1 class="text-heading-1 text-[#2C6E6B] mb-2">Fall Detection Testing</h1>
-        <p class="text-body-large text-[#F4EDE8]">Test live camera detection and upload files for analysis</p>
+        <h1 class="text-3xl font-bold text-[#2C6E6B] mb-2">Fall Detection Testing</h1>
+        <p class="text-[#F4EDE8] text-lg">Test live camera detection and upload files for analysis</p>
       </div>
       <a href="{% url 'detection:alerts' %}" 
-          class="btn-secondary mt-4 sm:mt-0">
+          class="inline-flex items-center px-6 py-3 bg-[#FAF9F6] hover:bg-[#F4EDE8] text-[#2C6E6B] font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105 mt-4 sm:mt-0">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" />
         </svg>
@@ -38,7 +38,7 @@
                   <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
                 {% endif %}
               </svg>
-              <span class="text-body-small">{{ message }}</span>
+              {{ message }}
             </div>
           </div>
         {% endfor %}
@@ -50,7 +50,7 @@
     <!-- Live Video Detection Card -->
     <div class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 mb-8">
       <div class="flex items-center justify-between mb-6">
-        <h2 class="text-heading-2 text-[#2C6E6B] flex items-center">
+        <h2 class="text-2xl font-semibold text-[#2C6E6B] flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
           </svg>
@@ -58,14 +58,14 @@
         </h2>
         <div class="flex gap-3">
           <button id="togglePose" 
-                  class="btn-secondary">
+                  class="inline-flex items-center px-4 py-2 bg-[#CBD4C2] hover:bg-[#9db09a] text-[#2C6E6B] font-medium rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 01-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12zm-9 7a1 1 0 012 0v1.586l2.293-2.293a1 1 0 111.414 1.414L6.414 15H8a1 1 0 010 2H4a1 1 0 01-1-1v-4zm13-1a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 010-2h1.586l-2.293-2.293a1 1 0 111.414-1.414L15 13.586V12a1 1 0 011-1z" clip-rule="evenodd" />
             </svg>
             Toggle Pose
           </button>
           <button id="startCamera" 
-                  class="btn-danger">
+                  class="inline-flex items-center px-6 py-3 bg-[#E07A5F] hover:bg-[#c56a52] text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
             </svg>
@@ -90,12 +90,12 @@
         
         <!-- No Camera Message -->
         <div id="noCameraMessage" 
-            class="absolute inset-0 flex items-center justify-center text-[#FAF9F6] text-heading-3 font-medium">
+            class="absolute inset-0 flex items-center justify-center text-[#FAF9F6] text-xl font-medium">
           <div class="text-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
-            <p class="text-body">Click "Start Camera" to begin live detection</p>
+            <p>Click "Start Camera" to begin live detection</p>
           </div>
         </div>
       </div>
@@ -105,9 +105,9 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center">
             <div id="statusIndicator" class="w-3 h-3 rounded-full bg-gray-400 mr-3"></div>
-            <span class="text-label text-[#2C6E6B]">Detection Status:</span>
+            <span class="text-sm font-medium text-[#2C6E6B]">Detection Status:</span>
           </div>
-          <div id="detectionStatus" class="text-label text-[#3C4251]">
+          <div id="detectionStatus" class="text-sm font-medium text-[#3C4251]">
             Camera not started
           </div>
         </div>
@@ -117,7 +117,7 @@
     <!-- Upload Preview Card (shown when processed_image exists) -->
     {% if processed_image %}
       <div id="previewCard" class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 mb-8">
-        <h2 class="text-heading-2 text-[#2C6E6B] mb-6 flex items-center">
+        <h2 class="text-2xl font-semibold text-[#2C6E6B] mb-6 flex items-center">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
           </svg>
@@ -141,23 +141,23 @@
                     <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5v3a.75.75 0 001.5 0v-3A.75.75 0 009 9z" clip-rule="evenodd" />
                   </svg>
                   <div>
-                    <h3 class="text-heading-4 text-red-800">Fall Detected!</h3>
-                    <p class="text-body text-red-700">Confidence: {{ confidence|floatformat:1 }}%</p>
+                    <h3 class="text-lg font-semibold text-red-800">Fall Detected!</h3>
+                    <p class="text-red-700">Confidence: {{ confidence|floatformat:1 }}%</p>
                   </div>
                 {% else %}
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-green-600 mr-3" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                   </svg>
                   <div>
-                    <h3 class="text-heading-4 text-green-800">No Fall Detected</h3>
-                    <p class="text-body text-green-700">The system did not detect any falls in this media.</p>
+                    <h3 class="text-lg font-semibold text-green-800">No Fall Detected</h3>
+                    <p class="text-green-700">The system did not detect any falls in this media.</p>
                   </div>
                 {% endif %}
               </div>
             </div>
             
             <button type="button" id="resetForm" 
-                    class="btn-secondary w-full">
+                    class="w-full inline-flex items-center justify-center px-6 py-3 bg-[#CBD4C2] hover:bg-[#9db09a] text-[#2C6E6B] font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                 <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
               </svg>
@@ -171,7 +171,7 @@
     <!-- Upload Form Card (hidden when preview is active) -->
     <div id="uploadCard" class="bg-[#FAF9F6] rounded-xl shadow-xl border-2 border-[#CBD4C2] p-6 mb-8"
         {% if processed_image %}style="display:none"{% endif %}>
-      <h2 class="text-heading-2 text-[#2C6E6B] mb-6 flex items-center">
+      <h2 class="text-2xl font-semibold text-[#2C6E6B] mb-6 flex items-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
         </svg>
@@ -191,40 +191,40 @@
           
           <div class="space-y-2">
             <label for="id_upload_file" class="cursor-pointer">
-              <span class="text-heading-4 text-[#2C6E6B] hover:text-[#E07A5F] transition-colors">
+              <span class="text-lg font-medium text-[#2C6E6B] hover:text-[#E07A5F] transition-colors">
                 Choose file to upload
               </span>
               <input id="id_upload_file" name="upload_file" type="file" class="sr-only" 
                     accept="image/*,video/*" required>
             </label>
-            <p class="text-body-small text-[#3C4251]">or drag and drop</p>
-            <p class="text-caption text-[#3C4251]">MP4, MOV, JPG, PNG up to 10MB</p>
+            <p class="text-sm text-[#3C4251]">or drag and drop</p>
+            <p class="text-xs text-[#3C4251]">MP4, MOV, JPG, PNG up to 10MB</p>
           </div>
           
-          <div id="file-name" class="mt-4 text-label text-[#2C6E6B]"></div>
+          <div id="file-name" class="mt-4 text-sm font-medium text-[#2C6E6B]"></div>
         </div>
 
         <!-- Description Field -->
         <div class="space-y-2">
-          <label for="id_description" class="form-label">
+          <label for="id_description" class="block text-sm font-medium text-[#2C6E6B]">
             Description (Optional)
           </label>
           <textarea id="id_description" name="description" rows="3" 
-                    class="form-input resize-none"
+                    class="w-full p-3 border-2 border-[#CBD4C2] rounded-lg focus:border-[#2C6E6B] focus:ring focus:ring-[#2C6E6B] focus:ring-opacity-50 resize-none"
                     placeholder="Add any details about this test..."></textarea>
         </div>
 
         <!-- Submit Button -->
         <div class="flex items-center justify-between pt-4">
           <button type="submit" 
-                  class="btn-danger">
+                  class="inline-flex items-center px-8 py-3 bg-[#E07A5F] hover:bg-[#c56a52] text-white font-semibold rounded-lg shadow-lg transition-all duration-200 transform hover:scale-105">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M12.395 2.553a1 1 0 00-1.45-.385c-.345.23-.614.558-.822.88-.214.33-.403.713-.57 1.116-.334.804-.614 1.768-.84 2.734a31.365 31.365 0 00-.613 3.58 2.64 2.64 0 01-.945-1.067c-.328-.68-.398-1.534-.398-2.654A1 1 0 005.05 6.05 6.981 6.981 0 003 11a7 7 0 1011.95-4.95c-.592-.591-.98-.985-1.348-1.467-.363-.476-.724-1.063-1.207-2.03zM12.12 15.12A3 3 0 017 13s.879.5 2.5.5c0-1 .5-4 1.25-4.5.5 1 .786 1.293 1.371 1.879A2.99 2.99 0 0113 13a2.99 2.99 0 01-.879 2.121z" clip-rule="evenodd" />
             </svg>
             Run Detection
           </button>
           <a href="{% url 'detection:alerts' %}" 
-            class="text-body-small text-[#3C4251] hover:text-[#2C6E6B] transition-colors">
+            class="text-sm text-[#3C4251] hover:text-[#2C6E6B] transition-colors">
             Cancel
           </a>
         </div>
@@ -240,8 +240,8 @@
           </svg>
         </div>
         <div class="ml-3">
-          <h3 class="text-heading-4 text-yellow-800">Testing Environment</h3>
-          <div class="mt-2 text-body-small text-yellow-700 space-y-2">
+          <h3 class="text-lg font-semibold text-yellow-800">Testing Environment</h3>
+          <div class="mt-2 text-sm text-yellow-700 space-y-2">
             <p>• This is a testing environment for the fall detection system</p>
             <p>• All alerts created here will be marked as "test_upload" or "live_camera"</p>
             <p>• Test alerts can be acknowledged without affecting real statistics</p>
@@ -546,10 +546,10 @@
       const file = fileInput.files[0];
       if (file) {
         fileNameDisplay.textContent = `Selected: ${file.name}`;
-        fileNameDisplay.className = "mt-4 text-label text-[#2C6E6B] bg-[#F4EDE8] px-3 py-1 rounded-full inline-block";
+        fileNameDisplay.className = "mt-4 text-sm font-medium text-[#2C6E6B] bg-[#F4EDE8] px-3 py-1 rounded-full inline-block";
       } else {
         fileNameDisplay.textContent = '';
-        fileNameDisplay.className = "mt-4 text-label text-[#2C6E6B]";
+        fileNameDisplay.className = "mt-4 text-sm font-medium text-[#2C6E6B]";
       }
     });
   }
