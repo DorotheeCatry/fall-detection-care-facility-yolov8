@@ -87,7 +87,17 @@ class FallAlert(models.Model):
         is_accurate: Whether the detection was accurate (True/False/None).
         accuracy_marked_by: User who marked the accuracy.
         accuracy_marked_at: Timestamp when accuracy was marked.
+        fall_state: État de la chute (monitoring, alert, urgent, recovered).
+        time_on_ground: Temps passé au sol en secondes.
     """
+    
+    FALL_STATE_CHOICES = [
+        ('monitoring', 'Monitoring'),
+        ('alert', 'Alert'),
+        ('urgent', 'Urgent'),
+        ('recovered', 'Recovered'),
+    ]
+    
     timestamp = models.DateTimeField(auto_now_add=True)
     detected_by = models.CharField(
         max_length=64,
@@ -156,6 +166,17 @@ class FallAlert(models.Model):
         null=True,
         blank=True
     )
+    fall_state = models.CharField(
+        max_length=20,
+        choices=FALL_STATE_CHOICES,
+        blank=True,
+        help_text="État de la chute (monitoring, alert, urgent, recovered)"
+    )
+    time_on_ground = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Temps passé au sol en secondes"
+    )
 
     class Meta:
         ordering = ["-timestamp"]
@@ -166,7 +187,8 @@ class FallAlert(models.Model):
         indicating its status (ACK or NEW) and the timestamp of detection.
         """
         status = "ACK" if self.acknowledged else "NEW"
-        return f"FallAlert [{status}] at {self.timestamp:%Y-%m-%d %H:%M:%S}"
+        state_info = f" [{self.fall_state.upper()}]" if self.fall_state else ""
+        return f"FallAlert [{status}]{state_info} at {self.timestamp:%Y-%m-%d %H:%M:%S}"
 
     def save_snapshot_from_frame(self, frame: np.ndarray):
         """
@@ -220,3 +242,23 @@ class FallAlert(models.Model):
         self.accuracy_marked_by = user
         self.accuracy_marked_at = timezone.now()
         self.save()
+        
+    def get_urgency_color(self):
+        """Retourne la couleur CSS correspondant à l'état de la chute."""
+        color_map = {
+            'monitoring': 'yellow',
+            'alert': 'orange', 
+            'urgent': 'red',
+            'recovered': 'green'
+        }
+        return color_map.get(self.fall_state, 'gray')
+    
+    def get_urgency_display(self):
+        """Retourne le texte d'affichage pour l'état de la chute."""
+        display_map = {
+            'monitoring': 'Surveillance',
+            'alert': 'Alerte',
+            'urgent': 'Urgent',
+            'recovered': 'Récupéré'
+        }
+        return display_map.get(self.fall_state, 'Inconnu')

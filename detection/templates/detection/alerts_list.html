@@ -68,7 +68,7 @@
         Filter Alerts
       </h3>
       <form method="get" class="space-y-4">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <!-- Include Tests Toggle -->
           <div class="space-y-2">
             <label class="block text-sm font-medium text-[#2C6E6B]">Alert Types</label>
@@ -111,6 +111,36 @@
               </label>
             </div>
           </div>
+          <!-- Fall State Filter -->
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-[#2C6E6B]">Fall State</label>
+            <div class="grid grid-cols-2 gap-1">
+              <label class="inline-flex items-center p-1 bg-white rounded border border-[#CBD4C2] hover:border-[#2C6E6B] transition-colors cursor-pointer">
+                <input type="checkbox" name="fall_state" value="monitoring"
+                      class="form-checkbox text-yellow-500 rounded focus:ring-yellow-500 text-xs"
+                      {% if 'monitoring' in fall_state_selected %}checked{% endif %} onchange="this.form.submit()">
+                <span class="ml-1 text-xs text-[#3C4251]">Monitor</span>
+              </label>
+              <label class="inline-flex items-center p-1 bg-white rounded border border-[#CBD4C2] hover:border-[#2C6E6B] transition-colors cursor-pointer">
+                <input type="checkbox" name="fall_state" value="alert"
+                      class="form-checkbox text-orange-500 rounded focus:ring-orange-500 text-xs"
+                      {% if 'alert' in fall_state_selected %}checked{% endif %} onchange="this.form.submit()">
+                <span class="ml-1 text-xs text-[#3C4251]">Alert</span>
+              </label>
+              <label class="inline-flex items-center p-1 bg-white rounded border border-[#CBD4C2] hover:border-[#2C6E6B] transition-colors cursor-pointer">
+                <input type="checkbox" name="fall_state" value="urgent"
+                      class="form-checkbox text-red-500 rounded focus:ring-red-500 text-xs"
+                      {% if 'urgent' in fall_state_selected %}checked{% endif %} onchange="this.form.submit()">
+                <span class="ml-1 text-xs text-[#3C4251]">Urgent</span>
+              </label>
+              <label class="inline-flex items-center p-1 bg-white rounded border border-[#CBD4C2] hover:border-[#2C6E6B] transition-colors cursor-pointer">
+                <input type="checkbox" name="fall_state" value="recovered"
+                      class="form-checkbox text-green-500 rounded focus:ring-green-500 text-xs"
+                      {% if 'recovered' in fall_state_selected %}checked{% endif %} onchange="this.form.submit()">
+                <span class="ml-1 text-xs text-[#3C4251]">Recover</span>
+              </label>
+            </div>
+          </div>
         </div>
         <div class="flex gap-3 pt-4 border-t border-[#CBD4C2]">
           <button type="submit" class="px-6 py-2 bg-[#2C6E6B] hover:bg-[#1f4f4c] text-white font-medium rounded-lg transition-colors">
@@ -134,6 +164,7 @@
                 <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">Source</th>
                 <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">Preview</th>
                 <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">Confidence</th>
+                <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">Fall State</th>
                 <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">Status</th>
                 <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">Accuracy</th>
                 <th class="px-6 py-4 text-left text-sm font-semibold text-[#FAF9F6] uppercase tracking-wider">Actions</th>
@@ -199,6 +230,46 @@
                       </div>
                     {% else %}
                       <span class="text-sm text-gray-400">N/A</span>
+                    {% endif %}
+                  </td>
+                  <!-- Fall State -->
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    {% if alert.fall_state %}
+                      {% if alert.fall_state == 'monitoring' %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                          <div class="w-2 h-2 bg-yellow-500 rounded-full mr-1"></div>
+                          Surveillance
+                          {% if alert.time_on_ground %}
+                            <span class="ml-1 text-xs">({{ alert.time_on_ground|floatformat:0 }}s)</span>
+                          {% endif %}
+                        </span>
+                      {% elif alert.fall_state == 'alert' %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                          <div class="w-2 h-2 bg-orange-500 rounded-full mr-1"></div>
+                          Alerte
+                          {% if alert.time_on_ground %}
+                            <span class="ml-1 text-xs">({{ alert.time_on_ground|floatformat:0 }}s)</span>
+                          {% endif %}
+                        </span>
+                      {% elif alert.fall_state == 'urgent' %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 animate-pulse">
+                          <div class="w-2 h-2 bg-red-500 rounded-full mr-1"></div>
+                          Urgent
+                          {% if alert.time_on_ground %}
+                            <span class="ml-1 text-xs">({{ alert.time_on_ground|floatformat:0 }}s)</span>
+                          {% endif %}
+                        </span>
+                      {% elif alert.fall_state == 'recovered' %}
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <div class="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
+                          Récupéré
+                        </span>
+                      {% endif %}
+                    {% else %}
+                      <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        <div class="w-2 h-2 bg-gray-500 rounded-full mr-1"></div>
+                        Non défini
+                      </span>
                     {% endif %}
                   </td>
                   <!-- Status -->

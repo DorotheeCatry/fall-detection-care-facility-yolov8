@@ -35,6 +35,7 @@ from .models import FallAlert
 from .forms import TestDetectionForm
 from .services import FallDetectionService
 from .services import VideoClipService
+from .tracking import fall_tracker, FallState
 
 # Instantiate the fall detection service globally to avoid reloading the model on every request
 fall_service = FallDetectionService(conf_threshold=0.70)
@@ -62,6 +63,9 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         today_alerts = FallAlert.objects.filter(timestamp__date=today).count()
         yesterday_alerts = FallAlert.objects.filter(timestamp__date=yesterday).count()
         pending_alerts = FallAlert.objects.filter(acknowledged=False).count()
+        
+        # Urgent alerts count
+        urgent_alerts = FallAlert.objects.filter(fall_state='urgent', acknowledged=False).count()
         
         # Response rate calculation
         total_real_alerts = FallAlert.objects.exclude(detected_by="test_upload").count()
@@ -148,6 +152,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             'today_alerts': today_alerts,
             'today_vs_yesterday': today_alerts - yesterday_alerts,
             'pending_alerts': pending_alerts,
+            'urgent_alerts': urgent_alerts,
             'response_rate': response_rate,
             'model_accuracy': model_accuracy,
             'total_marked_accuracy': total_marked,
@@ -195,6 +200,12 @@ class AlertListView(LoginRequiredMixin, ListView):
                 qs = qs.filter(acknowledged=True)
             elif "new" in status and "acknowledged" not in status:
                 qs = qs.filter(acknowledged=False)
+        
+        # Filter by fall state
+        fall_state = self.request.GET.getlist("fall_state")
+        if fall_state:
+            qs = qs.filter(fall_state__in=fall_state)
+            
         # Sorting
         sort = self.request.GET.get("sort")
         order = self.request.GET.get("order", "asc")
@@ -213,6 +224,7 @@ class AlertListView(LoginRequiredMixin, ListView):
         ctx["include_tests"] = (self.request.GET.get("include_tests") == "1")
         ctx["detected_by_selected"] = self.request.GET.getlist("detected_by")
         ctx["status_selected"] = self.request.GET.getlist("status")
+        ctx["fall_state_selected"] = self.request.GET.getlist("fall_state")
         ctx["date_selected"] = self.request.GET.get("date", "")
         ctx["hour_selected"] = self.request.GET.get("hour", "")
         return ctx
@@ -338,13 +350,13 @@ class TestDetectionView(LoginRequiredMixin, FormView):
             img_b64 = base64.b64encode(buf).decode()
 
             # --- 6. if fall → create test alert in DB ---
-                # 1️⃣ create the alert record
             if fall_detected:
                 alert = FallAlert.objects.create(
                     detected_by    = "test_upload",
                     description    = description or f"Test upload: {upload.name}",
                     yolo_confidence= confidence,
                     yolo_class     = "Fall-Detected",
+                    fall_state     = "monitoring",  # Test uploads start as monitoring
                 )
                 # 2️⃣ persist the original frame as the snapshot
                 alert.save_snapshot_from_frame(frame)
@@ -438,6 +450,7 @@ class CreateAlertView(LoginRequiredMixin, View):
             yolo_confidence = yolo_conf,
             yolo_class      = yolo_cls,
             metadata        = metadata,
+            fall_state      = "monitoring",  # Start with monitoring state
         )
         alert.save()
 
@@ -477,14 +490,14 @@ class CreateAlertView(LoginRequiredMixin, View):
 class RunYoloView(View):
     """
     API endpoint to run YOLO inference on a base64 image and (optionally) create/update a live_camera alert.
-    Throttles alert creation to avoid duplicates.
+    Throttles alert creation to avoid duplicates and integrates fall tracking.
     """
     THRESHOLD_SECS = 30         # Do not create more than one alert every 30 seconds
     CACHE_KEY      = "last_live_alert_ts"
 
     def post(self, request, *args, **kwargs):
         """
-        Handle POST request with base64 image, run YOLO inference, and manage alert creation.
+        Handle POST request with base64 image, run YOLO inference, and manage alert creation with tracking.
         """
         try:
             payload = json.loads(request.body.decode("utf-8"))
@@ -505,12 +518,32 @@ class RunYoloView(View):
             return JsonResponse({"error": f"Invalid image data: {str(e)}"}, status=400)
 
         try:
+            # Run YOLO detection
+            results = fall_service.run_model(img)
             fall_detected, confidence = fall_service.detect_falls(img)
+            
+            if not fall_detected:
+                return JsonResponse({"fall": False}, status=200)
+            
+            # Extract bounding box for tracking
+            bbox = None
+            for r in results:
+                for box in r.boxes:
+                    if r.names[int(box.cls)] == "Fall-Detected":
+                        bbox = tuple(map(int, box.xyxy[0].tolist()))
+                        break
+                if bbox:
+                    break
+            
+            if not bbox:
+                return JsonResponse({"fall": False}, status=200)
+            
+            # Update fall tracker
+            person_id = "live_camera_person"  # Single person tracking for live camera
+            fall_state, time_on_ground = fall_tracker.update_detection(person_id, bbox)
+            
         except Exception as e:
             return JsonResponse({"error": f"YOLO inference error: {str(e)}"}, status=500)
-
-        if not fall_detected:
-            return JsonResponse({"fall": False}, status=200)
 
         now = timezone.now()
         last_ts = cache.get(self.CACHE_KEY)
@@ -525,6 +558,8 @@ class RunYoloView(View):
             )
             if alert:
                 alert.yolo_confidence = confidence
+                alert.fall_state = fall_state.value
+                alert.time_on_ground = time_on_ground
                 alert.save()
                 alert.save_snapshot_from_frame(img)
                 alert.save()
@@ -534,9 +569,16 @@ class RunYoloView(View):
                 description     = "Fall detected via YOLOv8",
                 yolo_confidence = confidence,
                 yolo_class      = "Fall-Detected",
+                fall_state      = fall_state.value,
+                time_on_ground  = time_on_ground,
             )
             alert.save_snapshot_from_frame(img)
             alert.save()
             cache.set(self.CACHE_KEY, now.timestamp(), timeout=None)
 
-        return JsonResponse({"fall": True, "confidence": confidence}, status=200)
+        return JsonResponse({
+            "fall": True, 
+            "confidence": confidence,
+            "fall_state": fall_state.value,
+            "time_on_ground": time_on_ground
+        }, status=200)
