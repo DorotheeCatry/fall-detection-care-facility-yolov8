@@ -13,11 +13,11 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='fallalert',
             name='fall_state',
-            field=models.CharField(blank=True, choices=[('monitoring', 'Monitoring'), ('alert', 'Alert'), ('urgent', 'Urgent'), ('recovered', 'Recovered')], help_text='État de la chute (monitoring, alert, urgent, recovered)', max_length=20),
+            field=models.CharField(blank=True, choices=[('monitoring', 'Monitoring'), ('alert', 'Alert'), ('urgent', 'Urgent'), ('recovered', 'Recovered')], help_text='Fall state (monitoring, alert, urgent, recovered)', max_length=20),
         ),
         migrations.AddField(
             model_name='fallalert',
             name='time_on_ground',
-            field=models.FloatField(blank=True, help_text='Temps passé au sol en secondes', null=True),
+            field=models.FloatField(blank=True, help_text='Time spent on ground in seconds', null=True),
         ),
     ]

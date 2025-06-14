@@ -87,8 +87,8 @@ class FallAlert(models.Model):
         is_accurate: Whether the detection was accurate (True/False/None).
         accuracy_marked_by: User who marked the accuracy.
         accuracy_marked_at: Timestamp when accuracy was marked.
-        fall_state: État de la chute (monitoring, alert, urgent, recovered).
-        time_on_ground: Temps passé au sol en secondes.
+        fall_state: Fall state (monitoring, alert, urgent, recovered).
+        time_on_ground: Time spent on ground in seconds.
     """
     
     FALL_STATE_CHOICES = [
@@ -170,12 +170,12 @@ class FallAlert(models.Model):
         max_length=20,
         choices=FALL_STATE_CHOICES,
         blank=True,
-        help_text="État de la chute (monitoring, alert, urgent, recovered)"
+        help_text="Fall state (monitoring, alert, urgent, recovered)"
     )
     time_on_ground = models.FloatField(
         null=True,
         blank=True,
-        help_text="Temps passé au sol en secondes"
+        help_text="Time spent on ground in seconds"
     )
 
     class Meta:
@@ -244,7 +244,7 @@ class FallAlert(models.Model):
         self.save()
         
     def get_urgency_color(self):
-        """Retourne la couleur CSS correspondant à l'état de la chute."""
+        """Returns CSS color corresponding to fall state."""
         color_map = {
             'monitoring': 'yellow',
             'alert': 'orange', 
@@ -254,11 +254,11 @@ class FallAlert(models.Model):
         return color_map.get(self.fall_state, 'gray')
     
     def get_urgency_display(self):
-        """Retourne le texte d'affichage pour l'état de la chute."""
+        """Returns display text for fall state."""
         display_map = {
-            'monitoring': 'Surveillance',
-            'alert': 'Alerte',
+            'monitoring': 'Monitoring',
+            'alert': 'Alert',
             'urgent': 'Urgent',
-            'recovered': 'Récupéré'
+            'recovered': 'Recovered'
         }
-        return display_map.get(self.fall_state, 'Inconnu')
+        return display_map.get(self.fall_state, 'Unknown')

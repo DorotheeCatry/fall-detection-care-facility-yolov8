@@ -107,7 +107,7 @@
                 <input type="checkbox" name="status" value="acknowledged"
                       class="form-checkbox text-[#2C6E6B] rounded focus:ring-[#2C6E6B]"
                       {% if 'acknowledged' in status_selected %}checked{% endif %} onchange="this.form.submit()">
-                <span class="ml-1 text-xs text-[#3C4251]">Accurate</span>
+                <span class="ml-1 text-xs text-[#3C4251]">Acknowledged</span>
               </label>
             </div>
           </div>
@@ -137,7 +137,7 @@
                 <input type="checkbox" name="fall_state" value="recovered"
                       class="form-checkbox text-green-500 rounded focus:ring-green-500 text-xs"
                       {% if 'recovered' in fall_state_selected %}checked{% endif %} onchange="this.form.submit()">
-                <span class="ml-1 text-xs text-[#3C4251]">Recover</span>
+                <span class="ml-1 text-xs text-[#3C4251]">Recovered</span>
               </label>
             </div>
           </div>
@@ -238,7 +238,7 @@
                       {% if alert.fall_state == 'monitoring' %}
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                           <div class="w-2 h-2 bg-yellow-500 rounded-full mr-1"></div>
-                          Surveillance
+                          Monitoring
                           {% if alert.time_on_ground %}
                             <span class="ml-1 text-xs">({{ alert.time_on_ground|floatformat:0 }}s)</span>
                           {% endif %}
@@ -246,7 +246,7 @@
                       {% elif alert.fall_state == 'alert' %}
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                           <div class="w-2 h-2 bg-orange-500 rounded-full mr-1"></div>
-                          Alerte
+                          Alert
                           {% if alert.time_on_ground %}
                             <span class="ml-1 text-xs">({{ alert.time_on_ground|floatformat:0 }}s)</span>
                           {% endif %}
@@ -262,13 +262,13 @@
                       {% elif alert.fall_state == 'recovered' %}
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           <div class="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                          Récupéré
+                          Recovered
                         </span>
                       {% endif %}
                     {% else %}
                       <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                         <div class="w-2 h-2 bg-gray-500 rounded-full mr-1"></div>
-                        Non défini
+                        Not defined
                       </span>
                     {% endif %}
                   </td>
