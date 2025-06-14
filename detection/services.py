@@ -29,7 +29,7 @@ class FallDetectionService:
     """
     def __init__(
         self, 
-        model_path: str = '/home/utilisateur/Documents/Brief_Computer_Vision/fall-detection-care-facility-yolov8/model_dl/best.pt',
+        model_path: str = 'model_dl/best.pt',
         conf_threshold: float = 0.7
     ) -> None:
         """
