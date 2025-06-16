@@ -1,8 +1,8 @@
-# Sécur’Âge
+# Sécur'Âge
 
-**Sécur’Âge** is a cutting-edge, enterprise-grade fall detection platform designed to proactively safeguard the elderly in residential care settings. Born from extensive research and rigorous testing, our solution seamlessly integrates high-performance YOLOv8 object detection with OpenCV-driven video processing to deliver real-time incident alerts and comprehensive analytics. The modular Django backend, augmented by Bolt UI components, offers a responsive dashboard for facility managers and caregivers—enabling rapid response times, data-driven insights, and customizable workflows.
+**Sécur'Âge** is a cutting-edge, enterprise-grade fall detection platform designed to proactively safeguard the elderly in residential care settings. Born from extensive research and rigorous testing, our solution seamlessly integrates high-performance YOLOv8 object detection with OpenCV-driven video processing to deliver real-time incident alerts and comprehensive analytics. The modular Django backend, augmented by Bolt UI components, offers a responsive dashboard for facility managers and caregivers—enabling rapid response times, data-driven insights, and customizable workflows.
 
-Over countless development sprints, our interdisciplinary team prioritized reliability, accuracy, and scalability. We implemented robust snapshot management, secure media handling, and optional asynchronous processing via Celery/Redis to ensure continuous monitoring under diverse operational conditions. Deployed as an open-source project, Sécur’Âge empowers organizations to reduce fall-related risks through proactive detection, seamless integration, and actionable reporting.
+Over countless development sprints, our interdisciplinary team prioritized reliability, accuracy, and scalability. We implemented robust snapshot management, secure media handling, and optional asynchronous processing via Celery/Redis to ensure continuous monitoring under diverse operational conditions. Deployed as an open-source project, Sécur'Âge empowers organizations to reduce fall-related risks through proactive detection, seamless integration, and actionable reporting.
 
 ---
 
@@ -14,7 +14,7 @@ Over countless development sprints, our interdisciplinary team prioritized relia
 | Dashboard Overview                 | ![Dashboard Overview](docs/screenshots/Dashboard.png)                                               | Main dashboard showcasing synthetic metrics, weekly activity chart, and recent alerts. |
 | Alerts List View                   | ![Alerts List View](docs/screenshots/Alerts_list.png)                                               | Comprehensive alerts list displaying test-upload thumbnails and statuses.   |
 | Live Detection Interface (Idle)    | ![Live Detection Interface](docs/screenshots/Fall_detection_liveview.png)                           | Live camera detection panel in idle state—awaiting operator to start feed. |
-| Test Detection: No Fall Detected   | ![No Fall Detected](docs/screenshots/Test_View_No_fall_detected.png)                                | Result page showing “No Fall Detected” on a privacy-safe sample image.     |
+| Test Detection: No Fall Detected   | ![No Fall Detected](docs/screenshots/Test_View_No_fall_detected.png)                                | Result page showing "No Fall Detected" on a privacy-safe sample image.     |
 | Test Detection: Fall Detected      | ![Fall Detected](docs/screenshots/Test_view_Fall_Detected.png)                                      | Result page with bounding box and confidence score highlighting a detected fall. |
 
 ---
@@ -42,6 +42,14 @@ Over countless development sprints, our interdisciplinary team prioritized relia
 - **Acknowledgements & Accuracy Marking**
 - **Snapshot & Clip Storage** in `media/`
 - **Auto-refresh** every 30 s
+- **NEW: Advanced Fall State Tracking**:
+  - 🟡 **Monitoring** (0-10s): Initial fall detection
+  - 🟠 **Alert** (10-30s): Person on ground for a while
+  - 🔴 **Urgent** (>30s): Person immobile on ground for extended time
+  - 🟢 **Recovered**: Person got up by themselves
+- **Persistent Tracking**: Maintains state even when detection is intermittent
+- **Time-on-ground Tracking**: Shows how long a person has been on the ground
+- **Visual Indicators**: Color-coded bounding boxes and status labels
 
 ---
 
@@ -53,6 +61,7 @@ Over countless development sprints, our interdisciplinary team prioritized relia
 - **Frontend:** Tailwind CSS, plain JS for modals & auto-refresh
 - **Optional:** Celery + Redis for background tasks
 - **Database:** SQLite (dev) / PostgreSQL (prod)
+- **Fall Tracking:** Custom state machine with temporal analysis
 
 ---
 
@@ -109,7 +118,7 @@ Over countless development sprints, our interdisciplinary team prioritized relia
   X_FRAME_OPTIONS = 'SAMEORIGIN'
   ```
 - **Tailwind purge/content**\
-  Include all your `templates/**/*.html` in `tailwind.config.js`’s `content` array.
+  Include all your `templates/**/*.html` in `tailwind.config.js`'s `content` array.
 - **Environment vars** (for prod):
   - `DJANGO_SECRET_KEY`
   - `DATABASE_URL`
@@ -122,11 +131,25 @@ Over countless development sprints, our interdisciplinary team prioritized relia
 1. **Login** at `/accounts/login/`.
 2. **Dashboard** (`/`) shows live stats & recent alerts.
 3. **Alerts** (`/alerts/`):
-   - Filter by date, status, source
+   - Filter by date, status, source, and fall state
    - Click thumbnail to open full-size snapshot in modal
+   - View fall state progression (Monitoring → Alert → Urgent)
 4. **Test Detection** (`/test/`):
    - Upload an image or short video
    - Get immediate visual feedback & alert record
+   - Use live camera with real-time fall state tracking
+   - See color-coded bounding boxes based on urgency level
+
+### Fall State Progression
+
+The system tracks falls through multiple states:
+
+1. **🟡 Monitoring (0-10s)**: Initial fall detection, monitoring situation
+2. **🟠 Alert (10-30s)**: Person has been on ground for a while, needs attention
+3. **🔴 Urgent (>30s)**: Person immobile on ground for extended time, requires immediate help
+4. **🟢 Recovered**: Person got up by themselves, no intervention needed
+
+The system maintains state even when detection is intermittent, providing continuous tracking of fall incidents.
 
 ---
 
@@ -161,6 +184,7 @@ secur-age/
 │   ├── forms.py
 │   ├── models.py
 │   ├── services.py
+│   ├── tracking.py         # NEW: Fall state tracking system
 │   ├── tests.py
 │   ├── urls.py
 │   └── views.py
@@ -201,3 +225,19 @@ Please run `poetry run black .` and `poetry run flake8` before submitting.
 
 Distributed under the [MIT License](LICENSE).
 
+---
+
+## 🆕 Recent Updates
+
+### Fall State Tracking System (v1.1)
+
+We've implemented a sophisticated fall state tracking system that:
+
+- **Tracks fall progression** through multiple states (Monitoring → Alert → Urgent)
+- **Maintains state persistence** even when detection is intermittent
+- **Measures time-on-ground** to determine urgency level
+- **Provides visual indicators** with color-coded bounding boxes
+- **Filters alerts by state** in the dashboard
+- **Improves response prioritization** by clearly indicating which falls need urgent attention
+
+This system significantly enhances the platform's ability to prioritize responses based on fall severity and duration, leading to better care outcomes.
