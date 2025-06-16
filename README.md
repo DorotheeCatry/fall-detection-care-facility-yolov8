@@ -76,27 +76,38 @@ Over countless development sprints, our interdisciplinary team prioritized relia
 ## ⚙️ Installation (with Poetry)
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/your-org/secur-age.git
    cd secur-age
    ```
+
 2. **Install dependencies**
+
    ```bash
    poetry install
    ```
+
 3. **Activate the virtual environment**
+
    ```bash
    poetry shell
    ```
+
 4. **Apply database migrations**
+
    ```bash
    python manage.py migrate
    ```
+
 5. **Create a superuser**
+
    ```bash
    python manage.py createsuperuser
    ```
+
 6. **Run the development server**
+
    ```bash
    python manage.py runserver
    ```
@@ -112,11 +123,13 @@ Over countless development sprints, our interdisciplinary team prioritized relia
 ## 🔧 Configuration
 
 - Ensure in `settings.py`:
+
   ```python
   MEDIA_URL = '/media/'
   MEDIA_ROOT = BASE_DIR / 'media'
   X_FRAME_OPTIONS = 'SAMEORIGIN'
   ```
+
 - **Tailwind purge/content**\
   Include all your `templates/**/*.html` in `tailwind.config.js`'s `content` array.
 - **Environment vars** (for prod):
@@ -241,3 +254,11 @@ We've implemented a sophisticated fall state tracking system that:
 - **Improves response prioritization** by clearly indicating which falls need urgent attention
 
 This system significantly enhances the platform's ability to prioritize responses based on fall severity and duration, leading to better care outcomes.
+
+## 👥 Authors
+
+| Name | Email | GitHub |
+|------|-------|--------|
+| Eliandy **Dumortier** | [rymer.eliandy@gmail.com](mailto:rymer.eliandy@gmail.com) | [@EliandyDumortier](https://github.com/EliandyDumortier) |
+| Dorothée **Catry** | [catrydorothee@gmail.com](mailto:catrydorothee@gmail.com) | [@DorotheeCatry](https://github.com/DorotheeCatry) |
+| Wael **Bensoltana** | [wael.bensoltana@gmail.com](mailto:wael.bensoltana@gmail.com) | [@wbensolt](https://github.com/wbensolt) |
