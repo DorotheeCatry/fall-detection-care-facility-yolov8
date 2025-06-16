@@ -246,6 +246,7 @@
             <p>• All alerts created here will be marked as "test_upload" or "live_camera"</p>
             <p>• Test alerts can be acknowledged without affecting real statistics</p>
             <p>• Camera detection runs every 2 seconds to prevent spam alerts</p>
+            <p>• <strong>NEW:</strong> Live detection now shows fall states: 🟡 Monitoring → 🟠 Alert → 🔴 Urgent</p>
           </div>
         </div>
       </div>
@@ -255,7 +256,7 @@
 
 <!-- JavaScript for Enhanced Functionality -->
 <script type="module">
-  console.log("🔴 Enhanced test_detection.js started");
+  console.log("🔴 Enhanced test_detection.js started with fall state tracking");
 
   // Import Mediapipe Tasks-Vision
   import {
@@ -277,6 +278,9 @@
   let poseLandmarker = null;
   let isProcessing = false;
   let isCameraActive = false;
+  let currentFallState = null;
+  let currentTimeOnGround = 0;
+  let lastDetectionResults = null; // Store last YOLO results for drawing
 
   // Hidden canvas for YOLO processing
   let hiddenCanvas = document.createElement("canvas");
@@ -286,13 +290,30 @@
   let lastYoloTime = 0;
 
   // Update status indicators
-  function updateStatus(message, isActive = false, isDetecting = false) {
+  function updateStatus(message, isActive = false, fallState = null, timeOnGround = 0) {
     detectionStatus.textContent = message;
     
-    if (isDetecting) {
-      statusIndicator.className = "w-3 h-3 rounded-full bg-red-500 mr-3 animate-pulse";
-      statusDiv.style.display = "block";
-      statusDiv.textContent = "Fall Detected!";
+    if (fallState) {
+      currentFallState = fallState;
+      currentTimeOnGround = timeOnGround;
+      
+      // Update status based on fall state
+      if (fallState === 'urgent') {
+        statusIndicator.className = "w-3 h-3 rounded-full bg-red-500 mr-3 animate-pulse";
+        statusDiv.style.display = "block";
+        statusDiv.textContent = `🔴 URGENT (${Math.round(timeOnGround)}s)`;
+        statusDiv.className = "absolute top-4 right-4 px-4 py-2 bg-red-600 text-white rounded-full font-medium shadow-lg animate-pulse";
+      } else if (fallState === 'alert') {
+        statusIndicator.className = "w-3 h-3 rounded-full bg-orange-500 mr-3 animate-pulse";
+        statusDiv.style.display = "block";
+        statusDiv.textContent = `🟠 ALERT (${Math.round(timeOnGround)}s)`;
+        statusDiv.className = "absolute top-4 right-4 px-4 py-2 bg-orange-500 text-white rounded-full font-medium shadow-lg animate-pulse";
+      } else if (fallState === 'monitoring') {
+        statusIndicator.className = "w-3 h-3 rounded-full bg-yellow-500 mr-3 animate-pulse";
+        statusDiv.style.display = "block";
+        statusDiv.textContent = `🟡 MONITORING (${Math.round(timeOnGround)}s)`;
+        statusDiv.className = "absolute top-4 right-4 px-4 py-2 bg-yellow-500 text-white rounded-full font-medium shadow-lg animate-pulse";
+      }
     } else if (isActive) {
       statusIndicator.className = "w-3 h-3 rounded-full bg-green-500 mr-3";
       statusDiv.style.display = "none";
@@ -380,6 +401,7 @@
       noCameraMessage.style.display = "flex";
       isCameraActive = false;
       isProcessing = false;
+      lastDetectionResults = null;
       updateStatus("Camera stopped");
       ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
@@ -392,8 +414,11 @@
 
     while (videoElement.srcObject && isCameraActive) {
       try {
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
         // Pose detection
-        if (poseLandmarker) {
+        if (poseLandmarker && showPose) {
           const result = await poseLandmarker.detectForVideo(
             videoElement,
             performance.now()
@@ -401,11 +426,13 @@
 
           if (result.landmarks && result.landmarks.length > 0) {
             const singleLandmarks = result.landmarks[0];
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            if (showPose) {
-              drawLandmarks(singleLandmarks);
-            }
+            drawLandmarks(singleLandmarks);
           }
+        }
+
+        // Draw YOLO detection results if available
+        if (lastDetectionResults) {
+          drawYoloResults(lastDetectionResults);
         }
 
         // YOLO detection (every YOLO_INTERVAL ms)
@@ -425,61 +452,64 @@
     isProcessing = false;
   }
 
-  // Send frame to YOLO
-  async function sendFrameToYolo() {
-    try {
-      hiddenCtx.drawImage(videoElement, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
-      const dataUrl = hiddenCanvas.toDataURL("image/jpeg", 0.8);
-      const base64String = dataUrl.split(",")[1];
+  // Draw YOLO detection results with real bounding box
+  function drawYoloResults(results) {
+    if (!results || !results.fall || !results.bbox) return;
 
-      const response = await fetch("{% url 'detection:run_yolo' %}", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
-        },
-        body: JSON.stringify({ image: base64String })
-      });
-
-      if (!response.ok) {
-        console.error("YOLO API error:", response.status);
-        return;
-      }
-
-      const data = await response.json();
-      
-      if (data && data.fall) {
-        updateStatus(`Fall detected! Confidence: ${(data.confidence * 100).toFixed(1)}%`, true, true);
-        
-        // Create alert
-        fetch("{% url 'detection:create_alert' %}", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
-          },
-          body: JSON.stringify({
-            type: "live_camera",
-            description: "Fall detected via YOLOv8",
-            yolo_confidence: data.confidence,
-            yolo_class: "Fall-Detected",
-            snapshot_b64: dataUrl
-          })
-        }).then(r => {
-          if (r.ok) {
-            setTimeout(() => {
-              if (isCameraActive) {
-                updateStatus("Camera active - Monitoring for falls", true);
-              }
-            }, 3000);
-          }
-        });
-      }
-    } catch (error) {
-      console.error("❌ YOLO processing error:", error);
+    const fallState = results.fall_state || 'monitoring';
+    const timeOnGround = results.time_on_ground || 0;
+    const bbox = results.bbox;
+    
+    // Get color based on fall state
+    let color, bgColor;
+    switch (fallState) {
+      case 'urgent':
+        color = '#DC2626'; // red-600
+        bgColor = 'rgba(220, 38, 38, 0.1)';
+        break;
+      case 'alert':
+        color = '#EA580C'; // orange-600
+        bgColor = 'rgba(234, 88, 12, 0.1)';
+        break;
+      case 'monitoring':
+        color = '#CA8A04'; // yellow-600
+        bgColor = 'rgba(202, 138, 4, 0.1)';
+        break;
+      default:
+        color = '#6B7280'; // gray-500
+        bgColor = 'rgba(107, 114, 128, 0.1)';
     }
+
+    // Scale bbox coordinates to canvas size
+    const scaleX = canvas.width / hiddenCanvas.width;
+    const scaleY = canvas.height / hiddenCanvas.height;
+    
+    const x1 = bbox.x1 * scaleX;
+    const y1 = bbox.y1 * scaleY;
+    const width = bbox.width * scaleX;
+    const height = bbox.height * scaleY;
+
+    // Draw bounding box
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x1, y1, width, height);
+
+    // Draw background for text
+    const textHeight = 40;
+    ctx.fillStyle = bgColor;
+    ctx.fillRect(x1, y1 - textHeight, width, textHeight);
+
+    // Draw text
+    ctx.fillStyle = color;
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'center';
+    
+    const stateText = fallState.toUpperCase();
+    const timeText = `(${Math.round(timeOnGround)}s)`;
+    const centerX = x1 + width / 2;
+    
+    ctx.fillText(`${stateText} ${timeText}`, centerX, y1 - 20);
+    ctx.fillText(`Conf: ${(results.confidence * 100).toFixed(1)}%`, centerX, y1 - 5);
   }
 
   // Draw pose landmarks
@@ -507,6 +537,64 @@
       ctx.beginPath();
       ctx.arc(landmark.x * canvas.width, landmark.y * canvas.height, 4, 0, 2 * Math.PI);
       ctx.fill();
+    }
+  }
+
+  // Send frame to YOLO
+  async function sendFrameToYolo() {
+    try {
+      hiddenCtx.drawImage(videoElement, 0, 0, hiddenCanvas.width, hiddenCanvas.height);
+      const dataUrl = hiddenCanvas.toDataURL("image/jpeg", 0.8);
+      const base64String = dataUrl.split(",")[1];
+
+      const response = await fetch("{% url 'detection:run_yolo' %}", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value
+        },
+        body: JSON.stringify({ image: base64String })
+      });
+
+      if (!response.ok) {
+        console.error("YOLO API error:", response.status);
+        return;
+      }
+
+      const data = await response.json();
+      
+      if (data && data.fall) {
+        const fallState = data.fall_state || 'monitoring';
+        const timeOnGround = data.time_on_ground || 0;
+        
+        // Store results for drawing
+        lastDetectionResults = data;
+        
+        updateStatus(
+          `Fall detected! State: ${fallState} (${Math.round(timeOnGround)}s)`, 
+          true, 
+          fallState, 
+          timeOnGround
+        );
+        
+        // Auto-clear status after some time for non-urgent cases
+        if (fallState !== 'urgent') {
+          setTimeout(() => {
+            if (isCameraActive && currentFallState !== 'urgent') {
+              updateStatus("Camera active - Monitoring for falls", true);
+            }
+          }, 5000);
+        }
+      } else {
+        // No fall detected - clear any previous fall state
+        lastDetectionResults = null;
+        if (isCameraActive) {
+          updateStatus("Camera active - Monitoring for falls", true);
+        }
+      }
+    } catch (error) {
+      console.error("❌ YOLO processing error:", error);
     }
   }
 
