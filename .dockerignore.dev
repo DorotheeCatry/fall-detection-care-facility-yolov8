@@ -1,0 +1,49 @@
+# Dockerignore spécifique au développement
+
+# Git
+.git
+.gitignore
+
+# Python cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+.pytest_cache
+.coverage
+
+# Virtual environments
+.venv
+venv/
+env/
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker files
+Dockerfile*
+docker-compose*
+.dockerignore*
+
+# Documentation
+docs/
+*.md
+README*
+
+# CI/CD
+.github/
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/

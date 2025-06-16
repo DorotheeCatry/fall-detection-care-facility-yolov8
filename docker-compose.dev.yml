@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  secur-age-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    volumes:
+      # Monte le code source pour le hot-reload
+      - .:/app
+      # Volume persistant pour les médias
+      - dev_media:/app/media
+      # Volume pour la base de données
+      - dev_db:/app
+    environment:
+      - DEBUG=True
+      - DJANGO_SECRET_KEY=dev-secret-key-for-docker
+      - DATABASE_URL=sqlite:///db.sqlite3
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    # Permet l'accès à la webcam (si nécessaire)
+    devices:
+      - /dev/video0:/dev/video0
+    privileged: true
+
+volumes:
+  dev_media:
+  dev_db:
+
+networks:
+  default:
+    name: secur-age-dev-network
