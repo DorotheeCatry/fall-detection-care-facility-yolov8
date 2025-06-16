@@ -81,7 +81,8 @@
 <body class="bg-[#F4EDE8] text-[#3C4251] min-h-screen flex flex-col">
     <header class="bg-[#FAF9F6] shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo on the left -->
                 <div class="flex items-center">
                     <a href="{% url 'home' %}" class="flex-shrink-0 flex items-center">
                         <span class="text-[#2C6E6B] font-bold text-xl">Sécur'Âge</span>
@@ -89,21 +90,25 @@
                     </a>
                 </div>
                 
-                <nav class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                <!-- Centered navigation -->
+                <nav class="hidden sm:flex absolute left-1/2 transform -translate-x-1/2">
                     {% if user.is_authenticated %}
-                        <a href="{% url 'home' %}" class="inline-flex items-center px-1 pt-1 border-b-2 {% if request.path == '/' %}border-[#2C6E6B] text-[#3C4251]{% else %}border-transparent text-gray-500 hover:text-[#3C4251] hover:border-[#CBD4C2]{% endif %}">
-                            Home
-                        </a>
-                        <a href="{% url 'detection:alerts' %}" class="inline-flex items-center px-1 pt-1 border-b-2 {% if 'alerts' in request.path and not 'acknowledge' in request.path %}border-[#2C6E6B] text-[#3C4251]{% else %}border-transparent text-gray-500 hover:text-[#3C4251] hover:border-[#CBD4C2]{% endif %}">
-                            Alerts
-                        </a>
-                        <a href="{% url 'detection:test_detection' %}" class="inline-flex items-center px-1 pt-1 border-b-2 {% if 'test' in request.path %}border-[#2C6E6B] text-[#3C4251]{% else %}border-transparent text-gray-500 hover:text-[#3C4251] hover:border-[#CBD4C2]{% endif %}">
-                            Test Detection
-                        </a>
+                        <div class="flex space-x-8">
+                            <a href="{% url 'home' %}" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {% if request.path == '/' %}border-[#2C6E6B] text-[#3C4251]{% else %}border-transparent text-gray-500 hover:text-[#3C4251] hover:border-[#CBD4C2]{% endif %}">
+                                Home
+                            </a>
+                            <a href="{% url 'detection:alerts' %}" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {% if 'alerts' in request.path and not 'acknowledge' in request.path %}border-[#2C6E6B] text-[#3C4251]{% else %}border-transparent text-gray-500 hover:text-[#3C4251] hover:border-[#CBD4C2]{% endif %}">
+                                Alerts
+                            </a>
+                            <a href="{% url 'detection:test_detection' %}" class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium {% if 'test' in request.path %}border-[#2C6E6B] text-[#3C4251]{% else %}border-transparent text-gray-500 hover:text-[#3C4251] hover:border-[#CBD4C2]{% endif %}">
+                                Test Detection
+                            </a>
+                        </div>
                     {% endif %}
                 </nav>
                 
-                <div class="hidden sm:ml-6 sm:flex sm:items-center">
+                <!-- User info on the right -->
+                <div class="hidden sm:flex sm:items-center">
                     {% if user.is_authenticated %}
                         <span class="text-sm text-[#3C4251] mr-4">Hello, {{ user.username }}</span>
                         <form method="post" action="{% url 'accounts:logout' %}" class="inline">
@@ -113,6 +118,7 @@
                     {% endif %}
                 </div>
                 
+                <!-- Mobile menu button -->
                 <div class="flex items-center sm:hidden">
                     <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-[#3C4251] hover:text-[#2C6E6B] hover:bg-[#F4EDE8] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#2C6E6B]">
                         ☰
