@@ -4,7 +4,7 @@ services:
   secur-age-dev:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     volumes:
@@ -29,6 +29,7 @@ services:
 volumes:
   dev_media:
   dev_db:
+
 
 networks:
   default:
